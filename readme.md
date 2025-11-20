@@ -90,7 +90,21 @@ Cada form que van a hacer depende de mirar como esta construida la base de datos
 
 
 
+## Pasos para correr Proyecto Durante las Pruebas
 
+1-Crear ambiente VENV
+
+python -m venv venv
+
+2-Entrar al entorno virtual con el archivo activate
+
+activate.bat  para terminarles cmd y activate para shells
+
+3-Intalar dependencias
+
+pip install -r requirements.txt 
+
+4-Descargar las variables de entorno del DS "4F env-nuam" para poder conectarse a la base de datos "por buenas practicas no se puede dejar en el repositorio"
 
 
 
