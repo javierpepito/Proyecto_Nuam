@@ -16,8 +16,24 @@
 </head>
 <body>
     
+    <nav class="navbar border-bottom border-body" data-bs-theme="dark">
+        <div class="container-fluid">
+            <a class="navbar-brand m-2" href="#">
+                <img src="../static/images/logo.svg">
+            </a>
+            <div>
+                <a class="btn btn-outline-light mx-2" href="#">Tus Calificaciones</a>
+                <a class="btn btn-outline-light mx-2" href="#">Calificaciones Pendientes</a>
+                <a class="btn btn-outline-light mx-2" href="#">Añadir Calificación</a>
+                <a class="btn btn-outline-light mx-2" href="#">Calificaciones Mal Ingresadas</a>
+                <a class="btn btn-outline-light mx-2" href="#">Registrar Empresa No Inscrita</a>
+                <a class="btn btn-outline-light mx-2" href="#">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
     {% block content %}
     {% endblock %}
-    
+
 </body>
 </html>
