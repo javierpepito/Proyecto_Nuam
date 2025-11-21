@@ -91,10 +91,17 @@ class EquipoCalificadorInline(admin.TabularInline):
 	extra = 0
 
 	def formfield_for_foreignkey(self, db_field, request, **kwargs):
-		# Limita el listado de calificadores a los que aún no están asignados a un equipo
+		# Limita el listado de calificadores a los libres, pero conserva los ya asignados a este equipo al editar
 		if db_field.name == 'calificador':
-			usados = EquipoCalificador.objects.values_list('calificador__rut', flat=True)
-			kwargs['queryset'] = CalificadorTributario.objects.exclude(rut__in=usados)
+			object_id = request.resolver_match.kwargs.get('object_id')  # id del equipo en edición
+			if object_id:
+				# Excluir sólo los que están en otros equipos distintos a este
+				usados_en_otros = EquipoCalificador.objects.exclude(equipo_id=object_id).values_list('calificador__rut', flat=True)
+				kwargs['queryset'] = CalificadorTributario.objects.exclude(rut__in=usados_en_otros)
+			else:
+				# Creación de nuevo equipo: excluir todos los usados
+				usados = EquipoCalificador.objects.values_list('calificador__rut', flat=True)
+				kwargs['queryset'] = CalificadorTributario.objects.exclude(rut__in=usados)
 		return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
@@ -102,15 +109,24 @@ class EquipoCalificadorInline(admin.TabularInline):
 class EquipoDeTrabajoAdmin(admin.ModelAdmin):
 	# Muestra el jefe del equipo y un contador de calificadores
 	list_display = ("equipo_id", "jefe_equipo_rut", "calificadores_count")
+	# Enlaces de edición (asegura que siempre se pueda entrar al formulario)
+	list_display_links = ("equipo_id",)
+	# Quitar edición en línea: sólo acceder al formulario al hacer click
 	search_fields = ("equipo_id", "jefe_equipo_rut__rut")
 	# Permite gestionar los calificadores desde el detalle del equipo
 	inlines = [EquipoCalificadorInline]
 
 	def formfield_for_foreignkey(self, db_field, request, **kwargs):
-		# Limita el listado de jefes a aquellos que aún no lideran un equipo
+		# Limita el listado de jefes a los libres, conservando el actual si se edita
 		if db_field.name == 'jefe_equipo_rut':
-			usados = EquipoDeTrabajo.objects.values_list('jefe_equipo_rut__rut', flat=True)
-			kwargs['queryset'] = JefeEquipo.objects.exclude(rut__in=usados)
+			object_id = request.resolver_match.kwargs.get('object_id')
+			if object_id:
+				usados_en_otros = EquipoDeTrabajo.objects.exclude(pk=object_id).values_list('jefe_equipo_rut__rut', flat=True)
+				# Excluir los usados en otros equipos (ignorando nulls) pero dejar el actual
+				kwargs['queryset'] = JefeEquipo.objects.exclude(rut__in=[r for r in usados_en_otros if r])
+			else:
+				usados = EquipoDeTrabajo.objects.values_list('jefe_equipo_rut__rut', flat=True)
+				kwargs['queryset'] = JefeEquipo.objects.exclude(rut__in=[r for r in usados if r])
 		return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 	def calificadores_count(self, obj):
@@ -126,7 +142,10 @@ class EquipoDeTrabajoAdmin(admin.ModelAdmin):
 @admin.register(Cuenta)
 class CuentaAdmin(admin.ModelAdmin):
 	# Mostrar datos clave; equipo y rol se calculan automáticamente
-	list_display = ("cuenta_id", "rut", "rol", "equipo_trabajo", "nombre", "apellido", "edad", "correo")
+	list_display = ("cuenta_id", "rut", "rol", "equipo_trabajo", "nombre", "apellido", "edad", "correo", "telefono")
+	# Enlace principal de edición
+	list_display_links = ("cuenta_id", "rut")
+	# Quitar edición en línea: sólo acceder al formulario de detalle
 	search_fields = ("rut", "nombre", "apellido", "correo")
 	readonly_fields = ("rol", "equipo_trabajo")
 

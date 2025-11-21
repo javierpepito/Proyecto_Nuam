@@ -115,8 +115,8 @@ class EquipoDeTrabajo(models.Model):
 
 class EquipoCalificador(models.Model):
 	equipo = models.ForeignKey(EquipoDeTrabajo, on_delete=models.PROTECT, db_column='equipo_id', related_name='rel_calificadores')
-	# Un calificador solo puede estar en un equipo, por eso unique=True
-	calificador = models.ForeignKey(CalificadorTributario, on_delete=models.PROTECT, db_column='calificador_tributario_rut', to_field='rut', related_name='rel_equipos', unique=True)
+	# Un calificador solo puede estar en un equipo. Se garantiza con unique_together; se quita unique=True para evitar problemas de formulario.
+	calificador = models.ForeignKey(CalificadorTributario, on_delete=models.PROTECT, db_column='calificador_tributario_rut', to_field='rut', related_name='rel_equipos')
 
 	class Meta:
 		db_table = 'equipo_calificador'
