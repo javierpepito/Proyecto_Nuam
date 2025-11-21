@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'Contenedor_Calificaciones',
     'Proyecto_Nuam',
 ]
 

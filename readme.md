@@ -104,8 +104,13 @@ activate.bat  para terminarles cmd y activate para shells
 
 pip install -r requirements.txt 
 
-4-Descargar las variables de entorno del DS "4F env-nuam" para poder conectarse a la base de datos "por buenas practicas no se puede dejar en el repositorio"
+4-Descargar las variables de entorno del DS "4F env-nuam" para poder conectarse a la base de datos "por buenas practicas no se puede dejar en el repositorio" recuerda colocar el .env en el mismo nivel que el readme.md
 
 
+5-Para cambiar "actualizar un modelo en la base de datos recuerden aplicar las migraciones"
+
+python manage.py makemigrations Contenedor_Calificaciones
+
+python manage.py migrate
 
 
