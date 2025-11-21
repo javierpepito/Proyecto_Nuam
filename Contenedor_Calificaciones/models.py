@@ -78,12 +78,14 @@ class JefeEquipo(models.Model):
 
 class EquipoDeTrabajo(models.Model):
 	equipo_id = models.AutoField(primary_key=True)
-	# Un jefe solo puede pertenecer a un equipo (1 a 1)
+	# Un equipo puede estar temporalmente sin jefe asignado
 	jefe_equipo_rut = models.OneToOneField(
 		JefeEquipo,
 		on_delete=models.PROTECT,
 		db_column='jefe_equipo_rut',
 		to_field='rut',
+		null=True,
+		blank=True,
 	)
 	# Hasta 5 calificadores por equipo mediante relación intermedia
 	calificadores = models.ManyToManyField(
@@ -210,23 +212,24 @@ class Cuenta(models.Model):
 		if not self.rol:
 			self.rol = 'Jefe De Equipo' if es_jefe else 'Calificador Tributario'
 
-		# Autoasignar equipo según rol si aún no está seteado
+		# Autoasignar equipo si se encuentra relación; permitir None
 		if not self.equipo_trabajo_id:
-			try:
-				if es_jefe:
+			if es_jefe:
+				try:
 					self.equipo_trabajo = EquipoDeTrabajo.objects.get(jefe_equipo_rut__rut=self.rut)
-				else:
+				except EquipoDeTrabajo.DoesNotExist:
+					self.equipo_trabajo = None
+			else:
+				try:
 					rel = EquipoCalificador.objects.get(calificador__rut=self.rut)
 					self.equipo_trabajo = rel.equipo
-			except EquipoDeTrabajo.DoesNotExist:
-				raise ValidationError('El jefe no tiene un equipo asignado todavía.')
-			except EquipoCalificador.DoesNotExist:
-				raise ValidationError('El calificador no está asignado a ningún equipo.')
+				except EquipoCalificador.DoesNotExist:
+					self.equipo_trabajo = None
 		else:
 			# Si viene seteado (por código), validar coherencia.
-			if es_jefe and self.equipo_trabajo.jefe_equipo_rut.rut != self.rut:
+			if es_jefe and self.equipo_trabajo and self.equipo_trabajo.jefe_equipo_rut and self.equipo_trabajo.jefe_equipo_rut.rut != self.rut:
 				raise ValidationError('El RUT corresponde a un Jefe que no lidera ese equipo.')
-			if es_calificador and not EquipoCalificador.objects.filter(equipo=self.equipo_trabajo, calificador__rut=self.rut).exists():
+			if es_calificador and self.equipo_trabajo and not EquipoCalificador.objects.filter(equipo=self.equipo_trabajo, calificador__rut=self.rut).exists():
 				raise ValidationError('El Calificador no pertenece a ese equipo.')
 
 		# Capitalizar nombre y apellido.
