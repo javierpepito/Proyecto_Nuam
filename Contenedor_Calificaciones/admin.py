@@ -47,6 +47,13 @@ class EquipoCalificadorInline(admin.TabularInline):
 	model = EquipoCalificador
 	extra = 0
 
+	def formfield_for_foreignkey(self, db_field, request, **kwargs):
+		# Limita el listado de calificadores a los que aún no están asignados a un equipo
+		if db_field.name == 'calificador':
+			usados = EquipoCalificador.objects.values_list('calificador__rut', flat=True)
+			kwargs['queryset'] = CalificadorTributario.objects.exclude(rut__in=usados)
+		return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(EquipoDeTrabajo)
 class EquipoDeTrabajoAdmin(admin.ModelAdmin):
@@ -55,6 +62,13 @@ class EquipoDeTrabajoAdmin(admin.ModelAdmin):
 	search_fields = ("equipo_id", "jefe_equipo_rut__rut")
 	# Permite gestionar los calificadores desde el detalle del equipo
 	inlines = [EquipoCalificadorInline]
+
+	def formfield_for_foreignkey(self, db_field, request, **kwargs):
+		# Limita el listado de jefes a aquellos que aún no lideran un equipo
+		if db_field.name == 'jefe_equipo_rut':
+			usados = EquipoDeTrabajo.objects.values_list('jefe_equipo_rut__rut', flat=True)
+			kwargs['queryset'] = JefeEquipo.objects.exclude(rut__in=usados)
+		return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 	def calificadores_count(self, obj):
 		"""Devuelve la cantidad de calificadores asociados al equipo."""
