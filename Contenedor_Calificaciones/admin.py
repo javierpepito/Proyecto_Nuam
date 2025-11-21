@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from .models import CalificadorTributario, JefeEquipo, EquipoDeTrabajo, EquipoCalificador
+from .models import CalificadorTributario, JefeEquipo, EquipoDeTrabajo, EquipoCalificador, Cuenta
 
 
 @admin.register(CalificadorTributario)
@@ -61,4 +61,27 @@ class EquipoDeTrabajoAdmin(admin.ModelAdmin):
 		return obj.calificadores.count()
 
 	calificadores_count.short_description = "Calificadores"
+
+
+## Modelo Rol eliminado: el rol ahora se deriva automáticamente por RUT en Cuenta
+
+
+@admin.register(Cuenta)
+class CuentaAdmin(admin.ModelAdmin):
+	# Mostrar datos clave; equipo y rol se calculan automáticamente
+	list_display = ("cuenta_id", "rut", "rol", "equipo_trabajo", "nombre", "apellido", "edad", "correo")
+	search_fields = ("rut", "nombre", "apellido", "correo")
+	readonly_fields = ("rol", "equipo_trabajo")
+
+	def get_fields(self, request, obj=None):
+		# Orden de campos en el formulario excluyendo lo que se autocompleta
+		base = ["rut", "nombre", "apellido", "telefono", "correo", "direccion", "edad", "contrasena"]
+		# Mostrar rol y equipo como solo lectura si ya existen
+		if obj:
+			base += ["rol", "equipo_trabajo"]
+		return base
+
+	def save_model(self, request, obj, form, change):
+		# Delegar lógica al modelo (autoasignaciones en clean())
+		obj.save()
 

@@ -113,4 +113,14 @@ python manage.py makemigrations Contenedor_Calificaciones
 
 python manage.py migrate
 
+6- Ejecutar proyecto para pruebas 
+
+python manage.py runserver
+
+7- Cree super usuario temporal para las pruebas
+
+python manage.py createsuperuser
+
+admin
+admin
 
