@@ -11,7 +11,13 @@ from .validators import validate_rut_chileno, formatear_rut
 def Inicio_Calificador(request):
     if not request.session.get('cuenta_id'):
         return redirect('identificacion')
-    return render(request, 'Contenedor_Calificaciones/inicio_calificador.html')
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/inicio_calificador.html')
+
+#Vista temporal para añadir calificacion manualmente
+def Añadir_calificacion_manual(request):
+    if not request.session.get('cuenta_id'):
+        return redirect('identificacion')
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificacion_manual.html')
 
 
 def identificacion_view(request):
@@ -119,7 +125,7 @@ def login_view(request):
         'attempts_left': attempts_left,
     }
     return render(request, 'Contenedor_Calificaciones/login.html', context)
-
+# "Jefe De Equipo" y "Calificador Tributario" coleccion "cuenta"
 
 class EmpresaForm(forms.ModelForm):
     class Meta:

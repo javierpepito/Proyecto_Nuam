@@ -1,4 +1,9 @@
-{% extends 'Contenedor_Calificaciones/base.html' %}
+{% extends 'Contenedor_Calificaciones/base_calificador.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'Contenedor_Calificaciones/css/base_calificador.css' %}">
+{% endblock %}
 
 {% block title %}
     Agregar Calificacion Tributaria Manualmente
@@ -6,7 +11,7 @@
 
 {% block content %}
 
-<section class="seccion-fondo-claro d-flex flex-column justify-content-center align-items-center">
+    <section class="seccion d-flex flex-column justify-content-center align-items-center">
         <div class="contenedor-formulario p-4">
             <h2 class="text-center">
                 Ingresar una Calificación Tributaria
@@ -35,7 +40,7 @@
                     <label for="tipo_calificacion">Tipo de Calificación</label>
                     <input type="text" class="form-control" id="tipo_calificacion" name="tipo_calificacion" required>
                 </div>
-                {
+                
                 <div class="form-group mt-2">
                     <label for="monto_tributario">Monto Tributario</label>
                     <input type="number" class="form-control" id="monto_tributario" name="monto_tributario" required>

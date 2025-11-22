@@ -8,4 +8,5 @@ urlpatterns = [
     path("registrar_empresa/", views.registrar_empresa, name="registrar_empresa"),
     path("empresas/", views.lista_empresas, name="lista_empresas"),
     path("logout/", views.logout_view, name="logout"),
+    path("añadir_calificacion/", views.Añadir_calificacion_manual, name="Añadir_calificacion_manual"),
 ]

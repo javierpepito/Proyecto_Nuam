@@ -9,14 +9,14 @@
     <nav class="navbar border-bottom border-body navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand m-2" href="#">
-                <img src="../static/Contenedor_Calificaciones/images/logo.svg">
+                <img src="../static/Contenedor_Calificaciones/images/logoNuam.png" width="190px" height="50px">
             </a>
             <div>
 
                 {% if request.session.cuenta_id %}
                     <a class="btn btn-outline-light mx-2" href="#">Tus Calificaciones</a>
                     <a class="btn btn-outline-light mx-2" href="#">Calificaciones Pendientes</a>
-                    <a class="btn btn-outline-light mx-2" href="#">Añadir Calificación</a>
+                    <a class="btn btn-outline-light mx-2" href="{% url 'Añadir_calificacion_manual' %}">Añadir Calificación</a>
                     <a class="btn btn-outline-light mx-2" href="#">Calificaciones Mal Ingresadas</a>
                     <a class="btn btn-outline-light mx-2" href="{% url 'registrar_empresa' %}">Registrar Empresa</a>
                     <a class="btn btn-outline-light mx-2" href="{% url 'logout' %}">Cerrar Sesión</a>
