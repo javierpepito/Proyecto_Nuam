@@ -1,0 +1,16 @@
+{% extends 'Contenedor_Calificaciones/base.html' %}
+{% block title %}Identificación{% endblock %}
+{% block content %}
+<div class="container" style="max-width:480px; margin-top:40px;">
+  <h2 class="mb-4">Identificación</h2>
+  {% if mensaje %}<div class="alert alert-danger">{{ mensaje }}</div>{% endif %}
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="rut" class="form-label">Ingrese su RUT</label>
+      <input type="text" name="rut" id="rut" class="form-control" placeholder="12.345.678-9" required>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Continuar</button>
+  </form>
+</div>
+{% endblock %}

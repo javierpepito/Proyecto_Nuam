@@ -1,0 +1,31 @@
+{% extends 'Contenedor_Calificaciones/base.html' %}
+
+{% block title %}Registrar Empresa{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:640px; margin-top:40px;">
+    <h2 class="mb-4">Registrar Empresa</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            <label class="form-label" for="id_empresa_rut">RUT Empresa</label>
+            {{ form.empresa_rut }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="id_nombre_empresa">Nombre Empresa</label>
+            {{ form.nombre_empresa }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="id_pais">País</label>
+            {{ form.pais }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="id_tipo_de_empresa">Tipo de Empresa</label>
+            {{ form.tipo_de_empresa }}
+        </div>
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <a href="{% url 'Inicio_Calificador' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

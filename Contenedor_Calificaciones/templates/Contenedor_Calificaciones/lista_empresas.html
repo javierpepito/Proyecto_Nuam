@@ -1,0 +1,37 @@
+{% extends 'Contenedor_Calificaciones/base.html' %}
+
+{% block title %}Empresas Registradas{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top:40px;">
+    <h2 class="mb-4">Empresas Registradas</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>RUT</th>
+                <th>Nombre</th>
+                <th>País</th>
+                <th>Tipo</th>
+                <th>Ingresado Por</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for e in empresas %}
+            <tr>
+                <td>{{ e.empresa_rut }}</td>
+                <td>{{ e.nombre_empresa }}</td>
+                <td>{{ e.pais }}</td>
+                <td>{{ e.tipo_de_empresa }}</td>
+                <td>{{ e.ingresado_por_rut }}</td>
+                <td>{{ e.fecha_ingreso|date:'d/m/Y H:i' }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6" class="text-center">No hay empresas registradas.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'registrar_empresa' %}" class="btn btn-primary">Registrar Nueva Empresa</a>
+    <a href="{% url 'Inicio_Calificador' %}" class="btn btn-secondary">Volver al Inicio</a>
+</div>
+{% endblock %}

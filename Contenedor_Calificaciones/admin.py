@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from .models import CalificadorTributario, JefeEquipo, EquipoDeTrabajo, EquipoCalificador, Cuenta
+from .models import CalificadorTributario, JefeEquipo, EquipoDeTrabajo, EquipoCalificador, Cuenta, Empresa
 
 
 @admin.register(CalificadorTributario)
@@ -159,5 +159,24 @@ class CuentaAdmin(admin.ModelAdmin):
 
 	def save_model(self, request, obj, form, change):
 		# Delegar lógica al modelo (autoasignaciones en clean())
+		obj.save()
+
+
+@admin.register(Empresa)
+class EmpresaAdmin(admin.ModelAdmin):
+	list_display = ("empresa_rut", "nombre_empresa", "pais", "tipo_de_empresa", "ingresado_por", "fecha_ingreso")
+	search_fields = ("empresa_rut", "nombre_empresa", "pais", "tipo_de_empresa", "ingresado_por__rut")
+	readonly_fields = ("ingresado_por_rut", "fecha_ingreso")
+
+	def get_fields(self, request, obj=None):
+		base = ["empresa_rut", "nombre_empresa", "pais", "tipo_de_empresa"]
+		if obj:
+			base += ["ingresado_por", "ingresado_por_rut", "fecha_ingreso"]
+		else:
+			base += ["ingresado_por"]
+		return base
+
+	def save_model(self, request, obj, form, change):
+		# El rut de la cuenta se rellena automáticamente en clean()
 		obj.save()
 

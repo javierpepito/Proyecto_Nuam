@@ -8,6 +8,10 @@ from .validators import validate_rut_chileno, formatear_rut
 
 
 # Modelos para importarlos a la base de datos en Supabase
+
+
+# Modelo de calificadores tributarios
+
 class CalificadorTributario(models.Model):
 	rut = models.CharField(primary_key=True, max_length=13, validators=[validate_rut_chileno])  # 13 para soportar formato con puntos y guion
 	fecha_ingreso = models.DateField()
@@ -41,7 +45,7 @@ class CalificadorTributario(models.Model):
 
 
 
-
+# Modelo de jefes de equipo
 
 class JefeEquipo(models.Model):
 	rut = models.CharField(primary_key=True, max_length=13, validators=[validate_rut_chileno])  # 13 para soportar formato con puntos y guion
@@ -75,6 +79,8 @@ class JefeEquipo(models.Model):
 
 
 
+
+# Modelo de equipos de trabajo
 
 class EquipoDeTrabajo(models.Model):
 	equipo_id = models.AutoField(primary_key=True)
@@ -146,7 +152,6 @@ class EquipoCalificador(models.Model):
 
 
 # Modelo de cuentas de trabajadores (solo trabajadores ya registrados como JefeEquipo o CalificadorTributario)
-
 
 class Cuenta(models.Model):
 	cuenta_id = models.AutoField(primary_key=True)
@@ -249,5 +254,50 @@ class Cuenta(models.Model):
 		self.full_clean()
 		# atencion¡¡¡¡¡¡ Para ambiente real se debe usar hashing (Django auth). Aquí se guarda tal cual por requerimiento.
 		super().save(*args, **kwargs)
+
+
+
+
+# Modelo de empresas registradas por trabajadores
+
+class Empresa(models.Model):
+	empresa_rut = models.CharField(primary_key=True, max_length=13, validators=[validate_rut_chileno])
+	nombre_empresa = models.CharField(max_length=150)
+	ingresado_por = models.ForeignKey(Cuenta, on_delete=models.PROTECT, db_column='ingresado_por_id', related_name='empresas')
+	ingresado_por_rut = models.CharField(max_length=13, editable=False)
+	fecha_ingreso = models.DateTimeField(auto_now_add=True)
+	PAIS_CHOICES = (
+		('Chile', 'Chile'),
+		('Colombia', 'Colombia'),
+		('Peru', 'Perú'),
+	)
+	pais = models.CharField(max_length=10, choices=PAIS_CHOICES)
+	tipo_de_empresa = models.CharField(max_length=100)
+
+	class Meta:
+		db_table = 'empresa'
+		verbose_name = 'Empresa'
+		verbose_name_plural = 'Empresas'
+
+	def __str__(self) -> str:
+		return f"{self.nombre_empresa} ({self.empresa_rut})"
+
+	def clean(self):
+		# Validar y formatear RUT de la empresa
+		if self.empresa_rut:
+			validate_rut_chileno(self.empresa_rut)
+			self.empresa_rut = formatear_rut(self.empresa_rut)
+		# Capitalizar nombre empresa palabra por palabra
+		if self.nombre_empresa:
+			self.nombre_empresa = " ".join(p.capitalize() for p in self.nombre_empresa.strip().split())
+		# Asegurar coincidencia de rut de la cuenta ingresada
+		if self.ingresado_por_id and self.ingresado_por:
+			self.ingresado_por_rut = self.ingresado_por.rut
+
+	def save(self, *args, **kwargs):
+		self.full_clean()
+		super().save(*args, **kwargs)
+
+
 
 
