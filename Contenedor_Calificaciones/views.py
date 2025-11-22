@@ -25,7 +25,7 @@ def Inicio_Jefe(request):
     return render(request, 'Contenedor_Calificaciones/jefe_tributario/inicio_jefe.html')
 
 #Vista temporal para añadir calificacion manualmente
-def Añadir_calificacion_manual(request):
+def agregar_calificacion_manual(request):
     if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
         return redirect('identificacion')
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificacion_manual.html')
@@ -247,7 +247,7 @@ def agregar_calificacion(request):
             calificacion.save()
             
             messages.success(request, mensaje)
-            return redirect('Añadir_calificacion_manual', pk=calificacion.calificacion_id)  # Redirigir al detalle
+            return redirect('agregar_calificacion_manual', pk=calificacion.calificacion_id)  # Redirigir al detalle
         
         else:
             messages.error(request, 'Por favor, corrija los errores en el formulario.')
