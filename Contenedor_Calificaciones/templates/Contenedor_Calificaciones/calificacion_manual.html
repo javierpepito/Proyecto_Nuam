@@ -1,0 +1,65 @@
+{% extends 'Contenedor_Calificaciones/base.html' %}
+
+{% block title %}
+    Agregar Calificacion Tributaria Manualmente
+{% endblock %}
+
+{% block content %}
+
+<section class="seccion-fondo-claro d-flex flex-column justify-content-center align-items-center">
+        <div class="contenedor-formulario p-4">
+            <h2 class="text-center">
+                Ingresar una Calificación Tributaria
+                <span><i class="bi bi-calendar"></i></span>
+            </h2>
+            <p>Complete los siguientes datos para registrar la Calificación Tributaria.</p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group mt-2">
+                    <label for="rut">RUT de la Empresa</label>
+                    <input type="text" class="form-control" id="rut" name="rut" aria-describedby="ayudaFormato" placeholder="Ej: 23433434-6" required>
+                    <small id="ayudaFormato" class="form-text text-muted">Debes ingresar tu RUT sin puntos y con guión al final.</small>
+                </div>
+                
+                <div class="form-group mt-2">
+                    <label for="nombre">Nombre de la Empresa</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                </div>
+                
+                <div class="form-group mt-2">
+                    <label for="motivo_visita">Año Tributario</label>
+                    <input type="text" class="form-control" id="motivo_visita" name="motivo_visita" required>
+                </div>
+                
+                <div class="form-group mt-2">
+                    <label for="fecha_visita">Tipo de Calificación</label>
+                    <input type="date" class="form-control" id="fecha_visita" name="fecha_visita" required>
+                </div>
+                {
+                <div class="form-group mt-2">
+                    <label for="hora_entrada">Monto Tributario</label>
+                    <input type="time" class="form-control" id="hora_entrada" name="hora_entrada" required>
+                </div>
+                
+                <div class="form-group mt-2">
+                    <label for="hora_salida">Factor Tributario</label>
+                    <input type="time" class="form-control" id="hora_salida" name="hora_salida" required>
+                </div>
+
+                <div class="form-group mt-2">
+                    <label for="hora_salida">Unidad de Valor</label>
+                    <input type="time" class="form-control" id="hora_salida" name="hora_salida" required>
+                </div>
+
+                <div class="form-group mt-2">
+                    <label for="hora_salida">Puntaje de Calificación</label>
+                    <input type="time" class="form-control" id="hora_salida" name="hora_salida" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-4">Guardar</button>
+            </form>
+            
+        </div>
+    </section>
+
+{% endblock %}

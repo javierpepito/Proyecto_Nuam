@@ -124,3 +124,32 @@ python manage.py createsuperuser
 admin
 admin
 
+### Colores Usados
+* #f5732c
+
+### Atributos de Calificaciones Tributarias
+- calificacion_id (PK)
+- cuenta_id (FK)
+- rut_empresa (FK)
+- periodo_anio (INT)
+- tipo_calificacion (STR)
+- monto_tributario (INT)
+- factor_tributario (FLOAT)
+- unidad_valor (CLP, UF, UTM, COP, UVT, Etc)
+- puntaje_calificacion (De 0 a 100)
+- categoria_calificacion (Bajo. Medio, Alto)
+- nivel_riesgo (Bajo, Medio, Alto, Critico)
+- metodo_calificacion (Masiva o Manual, dato fantasma)
+- modelo_version (STR) --- ELIMINADO ---
+- fecha_calculo (Fecha y Hora actual)
+- vigencia_desde (Fecha) --- ELIMINADO ---
+- vigencia_hasta (Fecha) --- ELIMINADO ---
+- fuente_calculo (Manaul o Masiva) --- ELIMINADO ---
+- justificacion_resultado (STR)
+- observaciones (STR)
+- detalles (STR) ???? Archivos opcionales? --- ELIMINADO ---
+- estado_calificacion (STR o Boolean)
+
+### Cosas pendientes
+- Redireccion a tus empresas registradas (Filtro para mostrar empresas de una sola cuenta)
+- Cambio en el navbar segun rol, falta jefe equipo.
