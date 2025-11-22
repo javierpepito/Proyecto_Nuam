@@ -7,8 +7,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-    <!-- Conectar bien el static -->
-    <link rel="stylesheet" href="{% static 'Contenedor_Calificaciones/css/base.css' %}">
+    {% block extra_css %}
+    {% endblock %}
     <link rel="icon" href="../static/Contenedor_Calificaciones/images/icono_nuam.svg" type="image/svg+xml">
     <title>
         {% block title %}
@@ -17,32 +17,8 @@
 </head>
 <body>
     
-    <nav class="navbar border-bottom border-body navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand m-2" href="#">
-                <img src="../static/Contenedor_Calificaciones/images/logo.svg">
-            </a>
-            <div>
-
-                {% if request.session.cuenta_id %}
-                    <a class="btn btn-outline-light mx-2" href="#">Tus Calificaciones</a>
-                    <a class="btn btn-outline-light mx-2" href="#">Calificaciones Pendientes</a>
-                    <a class="btn btn-outline-light mx-2" href="#">Añadir Calificación</a>
-                    <a class="btn btn-outline-light mx-2" href="#">Calificaciones Mal Ingresadas</a>
-                    <a class="btn btn-outline-light mx-2" href="{% url 'registrar_empresa' %}">Registrar Empresa</a>
-                    <a class="btn btn-outline-light mx-2" href="{% url 'logout' %}">Cerrar Sesión</a>
-                {% else %}
-                    <button class="btn btn-outline-secondary mx-2" type="button" disabled>Tus Calificaciones</button>
-                    <button class="btn btn-outline-secondary mx-2" type="button" disabled>Calificaciones Pendientes</button>
-                    <button class="btn btn-outline-secondary mx-2" type="button" disabled>Añadir Calificación</button>
-                    <button class="btn btn-outline-secondary mx-2" type="button" disabled>Calificaciones Mal Ingresadas</button>
-                    <button class="btn btn-outline-secondary mx-2" type="button" disabled>Registrar Empresa</button>
-                    <a class="btn btn-outline-light mx-2" href="{% url 'identificacion' %}">Identificación</a>
-                {% endif %}
-
-            </div>
-        </div>
-    </nav>
+    {% block navbar %}
+    {% endblock %}
 
     {% block content %}
     {% endblock %}

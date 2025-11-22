@@ -1,0 +1,35 @@
+{% extends 'Contenedor_Calificaciones/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'Contenedor_Calificaciones/css/base_calificador.css' %}">
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar border-bottom border-body navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand m-2" href="#">
+                <img src="../static/Contenedor_Calificaciones/images/logo.svg">
+            </a>
+            <div>
+
+                {% if request.session.cuenta_id %}
+                    <a class="btn btn-outline-light mx-2" href="#">Tus Calificaciones</a>
+                    <a class="btn btn-outline-light mx-2" href="#">Calificaciones Pendientes</a>
+                    <a class="btn btn-outline-light mx-2" href="#">Añadir Calificación</a>
+                    <a class="btn btn-outline-light mx-2" href="#">Calificaciones Mal Ingresadas</a>
+                    <a class="btn btn-outline-light mx-2" href="{% url 'registrar_empresa' %}">Registrar Empresa</a>
+                    <a class="btn btn-outline-light mx-2" href="{% url 'logout' %}">Cerrar Sesión</a>
+                {% else %}
+                    <button class="btn btn-outline-secondary mx-2" type="button" disabled>Tus Calificaciones</button>
+                    <button class="btn btn-outline-secondary mx-2" type="button" disabled>Calificaciones Pendientes</button>
+                    <button class="btn btn-outline-secondary mx-2" type="button" disabled>Añadir Calificación</button>
+                    <button class="btn btn-outline-secondary mx-2" type="button" disabled>Calificaciones Mal Ingresadas</button>
+                    <button class="btn btn-outline-secondary mx-2" type="button" disabled>Registrar Empresa</button>
+                    <a class="btn btn-outline-light mx-2" href="{% url 'identificacion' %}">Identificación</a>
+                {% endif %}
+
+            </div>
+        </div>
+    </nav>
+{% endblock %}
