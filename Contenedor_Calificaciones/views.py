@@ -4,18 +4,27 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from .models import Empresa, Cuenta
 from .validators import validate_rut_chileno, formatear_rut
-    
-# Create your views here.
 
-#Vista inicial de calificador tributario
+#Variables constantes para los roles:
+ROL_JEFE = 'Jefe De Equipo'
+ROL_CALIFICADOR = 'Calificador Tributario'
+
+#Vista inicial del calificador tributario
 def Inicio_Calificador(request):
-    if not request.session.get('cuenta_id'):
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR: 
+        #Al redirigir a indetificarse no se le da a entender que es una vista unica para jefes, podrian ser dos if que redirigian a dos pantallas distintas y una de esas la pantalla de advertencia.
         return redirect('identificacion')
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/inicio_calificador.html')
 
+#Vista inicial del jefe
+def Inicio_Jefe(request):
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_JEFE:
+        return redirect('identificacion')
+    return render(request, 'Contenedor_Calificaciones/jefe_tributario/inicio_jefe.html')
+
 #Vista temporal para añadir calificacion manualmente
 def Añadir_calificacion_manual(request):
-    if not request.session.get('cuenta_id'):
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
         return redirect('identificacion')
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificacion_manual.html')
 
@@ -39,6 +48,7 @@ def identificacion_view(request):
             if cuenta:
                 request.session['nombre_identificado'] = cuenta.nombre
                 request.session['apellido_identificado'] = cuenta.apellido
+                request.session['cuenta_rol'] = cuenta.rol
                 request.session.pop('rut_invalido', None)
             else:
                 request.session['nombre_identificado'] = None
@@ -95,7 +105,15 @@ def login_view(request):
                 request.session['rol'] = cuenta.rol
                 request.session['login_attempts'] = 0
                 request.session.pop('login_block_until', None)
-                return redirect('Inicio_Calificador')
+                rol_identificado = request.session.get('rol')
+
+                if rol_identificado == 'Jefe De Equipo':
+                    return redirect('Inicio_Jefe')
+                elif rol_identificado == 'Calificador Tributario':
+                    return redirect('Inicio_Calificador') 
+                else:
+                    error = 'No rol asignado'
+                
             else:
                 attempts += 1
                 request.session['login_attempts'] = attempts
@@ -126,7 +144,6 @@ def login_view(request):
         'attempts_left': attempts_left,
     }
     return render(request, 'Contenedor_Calificaciones/login.html', context)
-# "Jefe De Equipo" y "Calificador Tributario" coleccion "cuenta"
 
 class EmpresaForm(forms.ModelForm):
     class Meta:
