@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from .models import Empresa, Cuenta
 from .validators import validate_rut_chileno, formatear_rut
-
+    
 # Create your views here.
 
 #Vista inicial de calificador tributario

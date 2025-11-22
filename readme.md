@@ -126,29 +126,30 @@ admin
 
 ### Colores Usados
 * #f5732c
+* #afafaf
 
 ### Atributos de Calificaciones Tributarias
-- calificacion_id (PK)
-- cuenta_id (FK)
-- rut_empresa (FK)
-- periodo_anio (INT)
-- tipo_calificacion (STR)
-- monto_tributario (INT)
-- factor_tributario (FLOAT)
-- unidad_valor (CLP, UF, UTM, COP, UVT, Etc)
-- puntaje_calificacion (De 0 a 100)
-- categoria_calificacion (Bajo. Medio, Alto)
-- nivel_riesgo (Bajo, Medio, Alto, Critico)
-- metodo_calificacion (Masiva o Manual, dato fantasma)
+- calificacion_id (PK, dato fantasma)
+- cuenta_id (FK), dato fantasma
+- rut_empresa (FK) 👍🏻
+- nombre_empresa (STR) 👍🏻
+- anio_tributario (INT) 👍🏻
+- tipo_calificacion (STR) 👍🏻
+- monto_tributario (INT) 👍🏻
+- factor_tributario (FLOAT) 👍🏻
+- unidad_valor (CLP, UF, UTM, COP, UVT, Etc) 👍🏻
+- puntaje_calificacion (De 0 a 100) 👍🏻
+- categoria_calificacion (Bajo. Medio, Alto) 👍🏻
+- nivel_riesgo (Bajo, Medio, Alto, Critico) 👍🏻
+- metodo_calificacion (Masiva o Manual, dato fantasma) 
 - modelo_version (STR) --- ELIMINADO ---
-- fecha_calculo (Fecha y Hora actual)
+- fecha_calculo (Fecha y Hora actual, dato fantasma) 
 - vigencia_desde (Fecha) --- ELIMINADO ---
 - vigencia_hasta (Fecha) --- ELIMINADO ---
 - fuente_calculo (Manaul o Masiva) --- ELIMINADO ---
-- justificacion_resultado (STR)
-- observaciones (STR)
+- justificacion_resultado (STR) 👍🏻
 - detalles (STR) ???? Archivos opcionales? --- ELIMINADO ---
-- estado_calificacion (STR o Boolean)
+- estado_calificacion (STR o Boolean, dato fantasma)
 
 ### Cosas pendientes
 - Redireccion a tus empresas registradas (Filtro para mostrar empresas de una sola cuenta)
