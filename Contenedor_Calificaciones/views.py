@@ -92,6 +92,7 @@ def login_view(request):
             if cuenta and cuenta.contrasena == contrasena:
                 # Login correcto
                 request.session['cuenta_id'] = cuenta.pk
+                request.session['rol'] = cuenta.rol
                 request.session['login_attempts'] = 0
                 request.session.pop('login_block_until', None)
                 return redirect('Inicio_Calificador')

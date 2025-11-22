@@ -1,17 +1,13 @@
 {% extends 'Contenedor_Calificaciones/base_calificador.html' %}
 {% load static %}
 
-{% block extra_css %}
-    <link rel="stylesheet" href="{% static 'Contenedor_Calificaciones/css/base_calificador.css' %}">
-{% endblock %}
-
 {% block title %}
     Agregar Calificacion Tributaria Manualmente
 {% endblock %}
 
 {% block content %}
 
-    <section class="seccion d-flex flex-column justify-content-center align-items-center">
+    <section class="seccion d-flex flex-column justify-content-center align-items-center m-4">
         <div class="contenedor-formulario p-4">
             <h2 class="text-center">
                 Ingresar una Calificación Tributaria
@@ -76,9 +72,9 @@
                     <input type="text" class="form-control" id="justificacion_resultado" name="justificacion_resultado" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary mt-4">Dejar en Pendiente</button>
-                <button type="submit" class="btn btn-primary mt-4">Enviar Calificación</button>
-                <button type="submit" class="btn btn-primary mt-4">Cancelar Calificación</button>
+                <button type="submit" class="btn btn-dark mt-4">Dejar en Pendiente</button>
+                <button type="submit" class="btn btn-dark mt-4">Enviar Calificación</button>
+                <button type="submit" class="btn btn-dark mt-4">Cancelar Calificación</button>
             </form>
             
         </div>

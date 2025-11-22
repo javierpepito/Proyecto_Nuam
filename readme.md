@@ -149,7 +149,7 @@ admin
 - fuente_calculo (Manaul o Masiva) --- ELIMINADO ---
 - justificacion_resultado (STR) 👍🏻
 - detalles (STR) ???? Archivos opcionales? --- ELIMINADO ---
-- estado_calificacion (STR o Boolean, dato fantasma)
+- estado_calificacion (STR o Boolean, dato fantasma) (Pendiente, Aprobado, Rechazado, Eliminado)
 
 ### Cosas pendientes
 - Redireccion a tus empresas registradas (Filtro para mostrar empresas de una sola cuenta)
