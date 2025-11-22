@@ -3,13 +3,9 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator, EmailValidator
 import re
 from .validators import validate_rut_chileno, formatear_rut
-
-
-
+from django.utils import timezone
 
 # Modelos para importarlos a la base de datos en Supabase
-
-
 # Modelo de calificadores tributarios
 
 class CalificadorTributario(models.Model):
@@ -299,5 +295,206 @@ class Empresa(models.Model):
 		super().save(*args, **kwargs)
 
 
+#Modelo de Calificaciones Tributarias
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 
 
+class CalificacionTributaria(models.Model):
+    # Choices para campos con opciones limitadas
+    CATEGORIA_CHOICES = [
+        ('bajo', 'Bajo'),
+        ('medio', 'Medio'),
+        ('alto', 'Alto'),
+    ]
+    
+    NIVEL_RIESGO_CHOICES = [
+        ('bajo', 'Bajo'),
+        ('medio', 'Medio'),
+        ('alto', 'Alto'),
+        ('critico', 'Crítico'),
+    ]
+    
+    METODO_CHOICES = [
+        ('masiva', 'Masiva'),
+        ('manual', 'Manual'),
+    ]
+    
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('por_aprobar', 'Por Aprobar'),
+        ('aprobado', 'Aprobado'),
+        ('rechazado', 'Rechazado'),
+        ('eliminado', 'Eliminado'),
+        ('mal_ingresada', 'Mal Ingresada'),
+    ]
+    
+    # ==================== DATOS FANTASMAS (Auto-generados) ====================
+    calificacion_id = models.AutoField(
+        primary_key=True,
+        verbose_name='ID Calificación'
+    )
+    
+    # FK a tu modelo Cuenta personalizado
+    cuenta_id = models.ForeignKey(
+        'Contenedor_Calificaciones.Cuenta', 
+        on_delete=models.PROTECT,
+        db_column='cuenta_id',
+        related_name='calificaciones',
+        verbose_name='Cuenta',
+        help_text='Usuario que crea la calificación',
+        editable=False  
+    )
+    
+    metodo_calificacion = models.CharField(
+        max_length=10,
+        choices=METODO_CHOICES,
+        default='manual',
+        verbose_name='Método de Calificación',
+        editable=False  # Dato fantasma
+    )
+    
+    fecha_calculo = models.DateTimeField(
+        default=timezone.now,
+        verbose_name='Fecha de Cálculo',
+        help_text='Fecha y hora en que se realizó el cálculo',
+        editable=False  # Dato fantasma
+    )
+    
+    estado_calificacion = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='pendiente',
+        verbose_name='Estado de la Calificación',
+        editable=False  # Dato fantasma
+    )
+    
+    # ==================== DATOS DEL USUARIO ====================
+    # FK a tu modelo Empresa
+    rut_empresa = models.ForeignKey(
+        'Contenedor_Calificaciones.Empresa',  
+        on_delete=models.PROTECT,
+        db_column='empresa_rut',
+        to_field='empresa_rut',
+        related_name='calificaciones',
+        verbose_name='RUT Empresa',
+        help_text='Empresa a calificar'
+    )
+    
+    # Campo desnormalizado para rendimiento (se auto-completa)
+    nombre_empresa = models.CharField(
+        max_length=255,
+        verbose_name='Nombre Empresa',
+        editable=False,  # Se auto-completa desde Empresa
+        blank=True
+    )
+    
+    anio_tributario = models.IntegerField(
+        validators=[
+            MinValueValidator(1900),
+            MaxValueValidator(2100)
+        ],
+        verbose_name='Año Tributario',
+        help_text='Año del periodo tributario'
+    )
+    
+    tipo_calificacion = models.CharField(
+        max_length=100,
+        verbose_name='Tipo de Calificación',
+        help_text='Tipo o categoría de la calificación tributaria'
+    )
+    
+    monto_tributario = models.FloatField(
+        validators=[MinValueValidator(0)],
+        verbose_name='Monto Tributario',
+        help_text='Monto en valor monetario'
+    )
+    
+    factor_tributario = models.FloatField(
+        validators=[MinValueValidator(0)],
+        verbose_name='Factor Tributario'
+    )
+    
+    unidad_valor = models.CharField(
+        max_length=50,
+        verbose_name='Unidad de Valor',
+        help_text='Unidad de medida del valor (CLP, UF, USD, etc.)'
+    )
+    
+    puntaje_calificacion = models.IntegerField(
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(100)
+        ],
+        verbose_name='Puntaje de Calificación',
+        help_text='Puntaje de 0 a 100'
+    )
+    
+    categoria_calificacion = models.CharField(
+        max_length=10,
+        choices=CATEGORIA_CHOICES,
+        verbose_name='Categoría de Calificación'
+    )
+    
+    nivel_riesgo = models.CharField(
+        max_length=10,
+        choices=NIVEL_RIESGO_CHOICES,
+        verbose_name='Nivel de Riesgo'
+    )
+    
+    justificacion_resultado = models.TextField(
+        verbose_name='Justificación del Resultado',
+        help_text='Descripción o justificación de la calificación obtenida',
+        blank=True,
+        null=True
+    )
+    
+    # ==================== METADATA ====================
+    class Meta:
+        db_table = 'calificacion_tributaria'
+        verbose_name = 'Calificación Tributaria'
+        verbose_name_plural = 'Calificaciones Tributarias'
+        ordering = ['-fecha_calculo']
+        indexes = [
+            models.Index(fields=['anio_tributario'], name='idx_calificacion_anio'),
+            models.Index(fields=['estado_calificacion'], name='idx_calificacion_estado'),
+            models.Index(fields=['-fecha_calculo'], name='idx_calificacion_fecha'),
+            models.Index(fields=['cuenta_id'], name='idx_calificacion_cuenta'),
+        ]
+        # Evitar duplicados: una empresa solo puede tener una calificación por año y tipo
+        unique_together = [['anio_tributario', 'tipo_calificacion']]
+    
+    def __str__(self):
+        return f"{self.nombre_empresa} - {self.anio_tributario} ({self.puntaje_calificacion}pts)"
+    
+    def clean(self):
+        """
+        Validaciones personalizadas antes de guardar
+        """
+        from django.core.exceptions import ValidationError
+        
+        # Auto-completar nombre_empresa desde la FK
+        if self.rut_empresa and not self.nombre_empresa:
+            self.nombre_empresa = self.rut_empresa.nombre_empresa
+        
+        # Validar que el año tributario no sea futuro
+        if self.anio_tributario and self.anio_tributario > timezone.now().year:
+            raise ValidationError({
+                'anio_tributario': 'El año tributario no puede ser mayor al año actual.'
+            })
+        
+        super().clean()
+    
+    def save(self, *args, **kwargs):
+        """
+        Sobrescribe el método save para lógica automática
+        """
+        # Ejecutar validaciones
+        self.full_clean()
+        
+        # Si es un nuevo registro, actualizar fecha_calculo
+        if not self.pk:
+            self.fecha_calculo = timezone.now()
+        
+        super().save(*args, **kwargs)

@@ -129,28 +129,40 @@ admin
 * #afafaf
 
 ### Atributos de Calificaciones Tributarias
-- calificacion_id (PK, dato fantasma)
-- cuenta_id (FK), dato fantasma
+- calificacion_id (PK, Dato fantasma)
+- cuenta_id (FK, Dato fantasma)
 - rut_empresa (FK) 👍🏻
-- nombre_empresa (STR) 👍🏻
-- anio_tributario (INT) 👍🏻
-- tipo_calificacion (STR) 👍🏻
-- monto_tributario (INT) 👍🏻
+- nombre_empresa (CHAR) 👍🏻
+- anio_tributario (INT o DATE) 👍🏻
+- tipo_calificacion (CHAR) 👍🏻
+- monto_tributario (FLOAT) 👍🏻
 - factor_tributario (FLOAT) 👍🏻
-- unidad_valor (CLP, UF, UTM, COP, UVT, Etc) 👍🏻
-- puntaje_calificacion (De 0 a 100) 👍🏻
+- unidad_valor (CHAR) 👍🏻
+- puntaje_calificacion ( INT De 0 a 100) 👍🏻
 - categoria_calificacion (Bajo. Medio, Alto) 👍🏻
 - nivel_riesgo (Bajo, Medio, Alto, Critico) 👍🏻
-- metodo_calificacion (Masiva o Manual, dato fantasma) 
-- modelo_version (STR) --- ELIMINADO ---
-- fecha_calculo (Fecha y Hora actual, dato fantasma) 
+- metodo_calificacion (Masiva o Manual, Dato fantasma) 
+- modelo_version (CHAR) --- ELIMINADO ---
+- fecha_calculo (Fecha y Hora actual, Dato fantasma) 
 - vigencia_desde (Fecha) --- ELIMINADO ---
 - vigencia_hasta (Fecha) --- ELIMINADO ---
 - fuente_calculo (Manaul o Masiva) --- ELIMINADO ---
-- justificacion_resultado (STR) 👍🏻
-- detalles (STR) ???? Archivos opcionales? --- ELIMINADO ---
-- estado_calificacion (STR o Boolean, dato fantasma) (Pendiente, Aprobado, Rechazado, Eliminado)
+- justificacion_resultado (CHAR) 👍🏻
+- detalles (CHAR) ???? Archivos opcionales? --- ELIMINADO ---
+- estado_calificacion (CHAR, Dato fantasma) (Pendiente, Por Aprobar, Aprobado, Rechazado, Eliminado, Mal Ingresada)
 
 ### Cosas pendientes
 - Redireccion a tus empresas registradas (Filtro para mostrar empresas de una sola cuenta)
 - Cambio en el navbar segun rol, falta jefe equipo.
+
+## Credenciales para uso en desarrollo
+- 21.087.922-0 Ragnar7m7., (Jefe)
+- 22.025.650-2 Ragnar7m7., (Calificador)
+
+	<div class="form-group col-md-4">
+      <label for="inputState">State</label>
+      <select id="inputState" class="form-control">
+        <option selected>Choose...</option>
+        <option>...</option>
+      </select>
+    </div>

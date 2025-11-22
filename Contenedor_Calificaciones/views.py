@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django import forms
+from django.contrib import messages
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from .models import Empresa, Cuenta
+from .models import Empresa, Cuenta, CalificacionTributaria
+from .forms import CalificacionTributariaForm
 from .validators import validate_rut_chileno, formatear_rut
 
 #Variables constantes para los roles:
@@ -197,3 +199,66 @@ def logout_view(request):
         ]:
             request.session.pop(key, None)
     return redirect('identificacion')
+
+#----------------------------------------------------------------------
+def agregar_calificacion(request):
+    """
+    Vista para agregar una nueva calificación tributaria.
+    Maneja tanto GET (mostrar formulario) como POST (procesar datos).
+    """
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR: 
+        #Al redirigir a indetificarse no se le da a entender que es una vista unica para jefes, podrian ser dos if que redirigian a dos pantallas distintas y una de esas la pantalla de advertencia.
+        return redirect('identificacion')
+    
+    
+    rut_obtenido = request.session.get('rut')
+    cuenta = Cuenta.objects.get(rut=rut_obtenido)
+    
+    
+    if request.method == 'POST':
+        # Determinar qué botón fue presionado
+        accion = request.POST.get('accion')
+        
+        form = CalificacionTributariaForm(request.POST)
+        
+        if form.is_valid():
+            # Crear el objeto sin guardar aún
+            calificacion = form.save(commit=False)
+            
+            # Asignar datos fantasmas
+            calificacion.cuenta_id = cuenta
+            calificacion.metodo_calificacion = 'manual'
+            
+            # Determinar el estado según el botón presionado
+            if accion == 'pendiente':
+                calificacion.estado_calificacion = 'pendiente'
+                mensaje = 'Calificación guardada como Pendiente exitosamente.'
+            elif accion == 'enviar':
+                calificacion.estado_calificacion = 'por_aprobar'
+                mensaje = 'Calificación enviada para aprobación exitosamente.'
+            elif accion == 'cancelar':
+                messages.info(request, 'Operación cancelada.')
+                return redirect('Añadir_calificacion_manual')  # Redirigir a una lista
+            else:
+                calificacion.estado_calificacion = 'pendiente'
+                mensaje = 'Calificación guardada exitosamente.'
+            
+            # Guardar en la base de datos
+            calificacion.save()
+            
+            messages.success(request, mensaje)
+            return redirect('Añadir_calificacion_manual', pk=calificacion.calificacion_id)  # Redirigir al detalle
+        
+        else:
+            messages.error(request, 'Por favor, corrija los errores en el formulario.')
+    
+    else:
+        # GET: Mostrar formulario vacío
+        form = CalificacionTributariaForm()
+    
+    context = {
+        'form': form,
+        'titulo': 'Agregar Calificación Tributaria',
+    }
+    
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificacion_manual.html', context)
