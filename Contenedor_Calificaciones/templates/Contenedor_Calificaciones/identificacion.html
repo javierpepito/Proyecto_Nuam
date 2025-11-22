@@ -1,16 +1,98 @@
 {% extends 'Contenedor_Calificaciones/base.html' %}
+{% load static %}
 {% block title %}Identificación{% endblock %}
 {% block content %}
-<div class="container" style="max-width:480px; margin-top:40px;">
-  <h2 class="mb-4">Identificación</h2>
-  {% if mensaje %}<div class="alert alert-danger">{{ mensaje }}</div>{% endif %}
-  <form method="post" novalidate>
-    {% csrf_token %}
-    <div class="mb-3">
-      <label for="rut" class="form-label">Ingrese su RUT</label>
-      <input type="text" name="rut" id="rut" class="form-control" placeholder="12.345.678-9" required>
-    </div>
-    <button type="submit" class="btn btn-primary w-100">Continuar</button>
-  </form>
+<style>
+  body {
+    background-color: #FF7043;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+  }
+  .logo-container {
+    text-align: center;
+    padding-top: 80px;
+    margin-bottom: 60px;
+  }
+  .logo-container img {
+    max-width: 300px;
+    height: auto;
+  }
+  .card-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .custom-card {
+    background-color: #F5F5F5;
+    border-radius: 40px;
+    padding: 60px 50px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+  }
+  .custom-title {
+    color: #FF7043;
+    font-weight: bold;
+    font-size: 2rem;
+    margin-bottom: 50px;
+    text-transform: uppercase;
+  }
+  .custom-input {
+    background-color: white;
+    border: 3px solid #E0E0E0;
+    border-radius: 20px;
+    padding: 20px 25px;
+    font-size: 1.3rem;
+    color: #FF7043;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .custom-input::placeholder {
+    color: #FFAB91;
+    font-weight: bold;
+  }
+  .custom-input:focus {
+    outline: none;
+    border-color: #FF7043;
+    box-shadow: 0 0 0 3px rgba(255,112,67,0.2);
+  }
+  .alert {
+    background-color: #FFEBEE;
+    border: 2px solid #FF5252;
+    border-radius: 15px;
+    margin-bottom: 20px;
+  }
+</style>
+
+<div class="logo-container">
+  <img src="{% static 'Contenedor_Calificaciones/images/logoNuam.png' %}" alt="Nuam Logo">
 </div>
+
+<div class="card-container">
+  <div class="custom-card">
+    <h1 class="custom-title">¡Ingresa tu RUT!</h1>
+    {% if mensaje %}
+    <div class="alert alert-danger">{{ mensaje }}</div>
+    {% endif %}
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <input type="text" name="rut" id="rut" class="form-control custom-input" placeholder="EJ: 21.564.675-4" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 d-none">Continuar</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Auto-submit al completar el RUT
+  document.getElementById('rut').addEventListener('blur', function() {
+    if(this.value.trim() !== '') {
+      this.form.submit();
+    }
+  });
+</script>
 {% endblock %}
