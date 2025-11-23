@@ -1,5 +1,7 @@
 from django import forms
 from .models import CalificacionTributaria, Empresa
+from .validators import validate_rut_chileno, formatear_rut
+from django.core.exceptions import ValidationError
 
 class CalificacionTributariaForm(forms.ModelForm):
     """
@@ -7,10 +9,22 @@ class CalificacionTributariaForm(forms.ModelForm):
     Solo muestra los campos que el usuario debe rellenar.
     """
     
+    # Campo de texto para RUT (no FK directa)
+    rut_empresa = forms.CharField(
+        max_length=13,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'rut_empresa',
+            'placeholder': 'Ej: 12345678-9',
+            'aria-describedby': 'ayudaFormato'
+        }),
+        label='RUT de la Empresa',
+        help_text='Debes ingresar el RUT sin puntos y con guión al final.'
+    )
+    
     class Meta:
         model = CalificacionTributaria
         fields = [
-            'rut_empresa',
             'anio_tributario',
             'tipo_calificacion',
             'monto_tributario',
@@ -23,10 +37,6 @@ class CalificacionTributariaForm(forms.ModelForm):
         ]
         
         widgets = {
-            'rut_empresa': forms.Select(attrs={
-                'class': 'form-control',
-                'id': 'rut_empresa'
-            }),
             'anio_tributario': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'id': 'anio_tributario',
@@ -82,7 +92,6 @@ class CalificacionTributariaForm(forms.ModelForm):
         }
         
         labels = {
-            'rut_empresa': 'RUT de la Empresa',
             'anio_tributario': 'Año Tributario',
             'tipo_calificacion': 'Tipo de Calificación',
             'monto_tributario': 'Monto Tributario',
@@ -101,16 +110,26 @@ class CalificacionTributariaForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
-        """
-        Personalizar el formulario al inicializarse
-        """
         super().__init__(*args, **kwargs)
-        
-        # Hacer justificacion_resultado opcional
         self.fields['justificacion_resultado'].required = False
+    
+    def clean_rut_empresa(self):
+        """Validar formato del RUT y que la empresa exista"""
+        rut = self.cleaned_data.get('rut_empresa', '').strip()
+        if not rut:
+            raise forms.ValidationError("El RUT de la empresa es obligatorio")
         
-        # Filtrar empresas para mostrar solo las activas (si aplica)
-        self.fields['rut_empresa'].queryset = Empresa.objects.all().order_by('nombre_empresa')
+        try:
+            validate_rut_chileno(rut)
+            rut_formateado = formatear_rut(rut)
+        except ValidationError as e:
+            raise forms.ValidationError(f"RUT inválido: {e.message}")
         
-        # Personalizar el label del select de empresa
-        self.fields['rut_empresa'].label_from_instance = lambda obj: f"{obj.nombre_empresa} ({obj.empresa_rut})"
+        # Validar que la empresa exista
+        if not Empresa.objects.filter(empresa_rut=rut_formateado).exists():
+            raise forms.ValidationError(
+                f'La empresa con RUT {rut_formateado} no está registrada. '
+                'Por favor, regístrela primero en la sección de Empresas.'
+            )
+        
+        return rut_formateado

@@ -222,10 +222,23 @@ def agregar_calificacion(request):
         form = CalificacionTributariaForm(request.POST)
         
         if form.is_valid():
+            # Obtener el RUT validado y formateado del formulario
+            rut_empresa = form.cleaned_data['rut_empresa']
+            
+            # Buscar la empresa (ya validamos que existe en clean_rut_empresa)
+            try:
+                empresa = Empresa.objects.get(empresa_rut=rut_empresa)
+            except Empresa.DoesNotExist:
+                # Este caso no debería ocurrir por la validación, pero por seguridad:
+                messages.error(request, f'La empresa con RUT {rut_empresa} no existe. Por favor regístrela primero.')
+                context = {'form': form}
+                return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificacion_manual.html', context)
+            
             # Crear el objeto sin guardar aún
             calificacion = form.save(commit=False)
             
-            # Asignar datos automáticos
+            # CRÍTICO: Asignar la FK ANTES de cualquier validación o guardado
+            calificacion.rut_empresa = empresa
             calificacion.cuenta_id = cuenta
             calificacion.metodo_calificacion = 'manual'
             
@@ -240,11 +253,13 @@ def agregar_calificacion(request):
                 calificacion.estado_calificacion = 'pendiente'
                 mensaje = 'Calificación guardada exitosamente.'
             
-            # Guardar en la base de datos
-            calificacion.save()
-            
-            messages.success(request, mensaje)
-            return redirect('Inicio_Calificador')  # Redirigir al inicio
+            try:
+                # Guardar en la base de datos
+                calificacion.save()
+                messages.success(request, mensaje)
+                return redirect('Inicio_Calificador')
+            except Exception as e:
+                messages.error(request, f'Error al guardar la calificación: {str(e)}')
         
         else:
             messages.error(request, 'Por favor, corrija los errores en el formulario.')
