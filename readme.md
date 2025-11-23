@@ -158,11 +158,3 @@ admin
 ## Credenciales para uso en desarrollo
 - 21.086.922-0 Ragnar7m7., (Jefe)
 - 22.025.650-2 Ragnar7m7., (Calificador)
-
-	<div class="form-group col-md-4">
-      <label for="inputState">State</label>
-      <select id="inputState" class="form-control">
-        <option selected>Choose...</option>
-        <option>...</option>
-      </select>
-    </div>

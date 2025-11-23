@@ -29,13 +29,6 @@ def Inicio_Jefe(request):
         return redirect('identificacion')
     return render(request, 'Contenedor_Calificaciones/jefe_tributario/inicio_jefe.html')
 
-#Vista temporal para añadir calificacion manualmente
-def agregar_calificacion_manual(request):
-    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
-        return redirect('identificacion')
-    return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificacion_manual.html')
-
-
 def identificacion_view(request):
     """Primera etapa: solicita solo el RUT y redirige a login para ingresar contraseña.
     Si el RUT no existe, se marca bandera para mostrar mensaje en login."""
@@ -181,14 +174,14 @@ def registrar_empresa(request):
                 return redirect('lista_empresas')
     else:
         form = EmpresaForm()
-    return render(request, 'Contenedor_Calificaciones/registrar_empresa.html', {"form": form})
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/registrar_empresa.html', {"form": form})
 
 
 def lista_empresas(request):
     if not request.session.get('cuenta_id'):
         return redirect('identificacion')
     empresas = Empresa.objects.select_related('ingresado_por').all().order_by('-fecha_ingreso')
-    return render(request, 'Contenedor_Calificaciones/lista_empresas.html', {"empresas": empresas})
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/lista_empresas.html', {"empresas": empresas})
 
 
 def logout_view(request):
@@ -205,24 +198,26 @@ def logout_view(request):
             request.session.pop(key, None)
     return redirect('identificacion')
 
-#----------------------------------------------------------------------
+#Vista para agregar calificacion tributaria
 def agregar_calificacion(request):
-    """
-    Vista para agregar una nueva calificación tributaria.
-    Maneja tanto GET (mostrar formulario) como POST (procesar datos).
-    """
     if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR: 
-        #Al redirigir a indetificarse no se le da a entender que es una vista unica para jefes, podrian ser dos if que redirigian a dos pantallas distintas y una de esas la pantalla de advertencia.
         return redirect('identificacion')
     
-    
-    rut_obtenido = request.session.get('rut')
-    cuenta = Cuenta.objects.get(rut=rut_obtenido)
-    
+    cuenta_id = request.session.get('cuenta_id')
+    try:
+        cuenta = Cuenta.objects.get(pk=cuenta_id)
+    except Cuenta.DoesNotExist:
+        messages.error(request, 'Sesión inválida. Por favor, inicie sesión nuevamente.')
+        return redirect('identificacion')
     
     if request.method == 'POST':
         # Determinar qué botón fue presionado
         accion = request.POST.get('accion')
+        
+        # Si presionó cancelar, redirigir sin procesar
+        if accion == 'cancelar':
+            messages.info(request, 'Operación cancelada.')
+            return redirect('Inicio_Calificador')
         
         form = CalificacionTributariaForm(request.POST)
         
@@ -230,7 +225,7 @@ def agregar_calificacion(request):
             # Crear el objeto sin guardar aún
             calificacion = form.save(commit=False)
             
-            # Asignar datos fantasmas
+            # Asignar datos automáticos
             calificacion.cuenta_id = cuenta
             calificacion.metodo_calificacion = 'manual'
             
@@ -241,9 +236,6 @@ def agregar_calificacion(request):
             elif accion == 'enviar':
                 calificacion.estado_calificacion = 'por_aprobar'
                 mensaje = 'Calificación enviada para aprobación exitosamente.'
-            elif accion == 'cancelar':
-                messages.info(request, 'Operación cancelada.')
-                return redirect('Añadir_calificacion_manual')  # Redirigir a una lista
             else:
                 calificacion.estado_calificacion = 'pendiente'
                 mensaje = 'Calificación guardada exitosamente.'
@@ -252,7 +244,7 @@ def agregar_calificacion(request):
             calificacion.save()
             
             messages.success(request, mensaje)
-            return redirect('agregar_calificacion_manual', pk=calificacion.calificacion_id)  # Redirigir al detalle
+            return redirect('Inicio_Calificador')  # Redirigir al inicio
         
         else:
             messages.error(request, 'Por favor, corrija los errores en el formulario.')
@@ -263,13 +255,11 @@ def agregar_calificacion(request):
     
     context = {
         'form': form,
-        'titulo': 'Agregar Calificación Tributaria',
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificacion_manual.html', context)
 
-#----------------------------------------------------------------------
-
+#Vista para agregar calificacion tributaria mediante archivo masivo
 def carga_masiva_view(request):
     """
     Vista para carga masiva de calificaciones desde archivo Excel.
