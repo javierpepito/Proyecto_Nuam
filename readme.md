@@ -94,7 +94,9 @@ Cada form que van a hacer depende de mirar como esta construida la base de datos
 
 1-Crear ambiente VENV
 
+``` bash
 python -m venv venv
+```
 
 2-Entrar al entorno virtual con el archivo activate
 
@@ -102,24 +104,33 @@ activate.bat  para terminarles cmd y activate para shells
 
 3-Intalar dependencias
 
+``` bash
 pip install -r requirements.txt 
+```
 
 4-Descargar las variables de entorno del DS "4F env-nuam" para poder conectarse a la base de datos "por buenas practicas no se puede dejar en el repositorio" recuerda colocar el .env en el mismo nivel que el readme.md
 
 
 5-Para cambiar "actualizar un modelo en la base de datos recuerden aplicar las migraciones"
 
+``` bash
 python manage.py makemigrations Contenedor_Calificaciones
-
+```
+``` bash
 python manage.py migrate
+```
 
 6- Ejecutar proyecto para pruebas 
 
+``` bash
 python manage.py runserver
+```
 
 7- Cree super usuario temporal para las pruebas
 
+```bash
 python manage.py createsuperuser
+```
 
 admin
 admin
@@ -142,18 +153,12 @@ admin
 - categoria_calificacion (Bajo. Medio, Alto) 👍🏻
 - nivel_riesgo (Bajo, Medio, Alto, Critico) 👍🏻
 - metodo_calificacion (Masiva o Manual, Dato fantasma) 
-- modelo_version (CHAR) --- ELIMINADO ---
 - fecha_calculo (Fecha y Hora actual, Dato fantasma) 
-- vigencia_desde (Fecha) --- ELIMINADO ---
-- vigencia_hasta (Fecha) --- ELIMINADO ---
-- fuente_calculo (Manaul o Masiva) --- ELIMINADO ---
 - justificacion_resultado (CHAR) 👍🏻
-- detalles (CHAR) ???? Archivos opcionales? --- ELIMINADO ---
 - estado_calificacion (CHAR, Dato fantasma) (Pendiente, Por Aprobar, Aprobado, Rechazado, Eliminado, Mal Ingresada)
 
 ### Cosas pendientes
 - Redireccion a tus empresas registradas (Filtro para mostrar empresas de una sola cuenta)
-- Cambio en el navbar segun rol, falta jefe equipo.
 
 ## Credenciales para uso en desarrollo
 - 21.086.922-0 Ragnar7m7., (Jefe)
