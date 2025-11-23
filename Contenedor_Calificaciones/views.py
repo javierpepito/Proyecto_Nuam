@@ -7,6 +7,11 @@ from .models import Empresa, Cuenta, CalificacionTributaria
 from .forms import CalificacionTributariaForm
 from .validators import validate_rut_chileno, formatear_rut
 
+import pandas as pd
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import os
+
 #Variables constantes para los roles:
 ROL_JEFE = 'Jefe De Equipo'
 ROL_CALIFICADOR = 'Calificador Tributario'
@@ -262,3 +267,205 @@ def agregar_calificacion(request):
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificacion_manual.html', context)
+
+#----------------------------------------------------------------------
+
+def carga_masiva_view(request):
+    """
+    Vista para carga masiva de calificaciones desde archivo Excel.
+    Muestra vista previa de los datos con validaciones.
+    """
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
+        return redirect('identificacion')
+    
+    datos_procesados = []
+    errores_globales = []
+    archivo_nombre = None
+    
+    if request.method == 'POST' and request.FILES.get('archivo_excel'):
+        archivo = request.FILES['archivo_excel']
+        archivo_nombre = archivo.name
+        
+        # Validar extensión del archivo
+        if not archivo.name.endswith(('.xlsx', '.xls')):
+            errores_globales.append('El archivo debe ser formato Excel (.xlsx o .xls)')
+        else:
+            try:
+                # Leer el archivo Excel
+                df = pd.read_excel(archivo, engine='openpyxl')
+                
+                # Validar que no esté vacío
+                if df.empty:
+                    errores_globales.append('El archivo Excel está vacío.')
+                else:
+                    # Mapeo de columnas esperadas (según tu imagen del Excel)
+                    columnas_esperadas = {
+                        'Nº': 'numero',
+                        'RUT de la Empresa': 'rut_empresa',
+                        'Nombre de la Empresa': 'nombre_empresa',
+                        'Año Tributario': 'anio_tributario',
+                        'Tipo de Calificacion': 'tipo_calificacion',
+                        'Monto Tributario': 'monto_tributario',
+                        'Factor Tributario': 'factor_tributario',
+                        'Unidad de Valor': 'unidad_valor',
+                        'Puntaje de Calificación': 'puntaje_calificacion',
+                        'Categoría de la Calificación': 'categoria_calificacion',
+                        'Nivel de Riesgo': 'nivel_riesgo',
+                        'Justificación del resultado (Observaciones)': 'justificacion_resultado'
+                    }
+                    
+                    # Renombrar columnas para trabajar más fácil
+                    df.columns = df.columns.str.strip()
+                    
+                    # Validar que existan las columnas necesarias
+                    columnas_faltantes = []
+                    for col_excel in columnas_esperadas.keys():
+                        if col_excel not in df.columns:
+                            columnas_faltantes.append(col_excel)
+                    
+                    if columnas_faltantes:
+                        errores_globales.append(f"Faltan columnas en el Excel: {', '.join(columnas_faltantes)}")
+                    else:
+                        # Procesar cada fila (máximo 10)
+                        filas_procesadas = 0
+                        
+                        for index, row in df.iterrows():
+                            # Saltar filas vacías
+                            if pd.isna(row['RUT de la Empresa']) or str(row['RUT de la Empresa']).strip() == '':
+                                continue
+                            
+                            if filas_procesadas >= 10:
+                                errores_globales.append('⚠️ Se permiten máximo 10 calificaciones por archivo. Las filas adicionales fueron ignoradas.')
+                                break
+                            
+                            filas_procesadas += 1
+                            errores_fila = []
+                            
+                            # Validar RUT empresa (debe existir en BD)
+                            rut_empresa_valor = str(row['RUT de la Empresa']).strip()
+                            try:
+                                validate_rut_chileno(rut_empresa_valor)
+                                rut_formateado = formatear_rut(rut_empresa_valor)
+                                empresa = Empresa.objects.filter(empresa_rut=rut_formateado).first()
+                                
+                                if not empresa:
+                                    errores_fila.append(f'Empresa con RUT {rut_formateado} no está registrada.')
+                            except ValidationError as e:
+                                errores_fila.append(f'RUT inválido: {rut_empresa_valor}')
+                                rut_formateado = rut_empresa_valor
+                                empresa = None
+                            
+                            # Validar año tributario
+                            try:
+                                anio = int(row['Año Tributario'])
+                                if anio < 1900 or anio > timezone.now().year:
+                                    errores_fila.append(f'Año tributario {anio} fuera de rango (1900-{timezone.now().year})')
+                            except (ValueError, TypeError):
+                                errores_fila.append(f'Año tributario inválido: {row["Año Tributario"]}')
+                                anio = None
+                            
+                            # Validar monto tributario
+                            try:
+                                monto = float(row['Monto Tributario'])
+                                if monto < 0:
+                                    errores_fila.append('Monto tributario no puede ser negativo')
+                            except (ValueError, TypeError):
+                                errores_fila.append(f'Monto tributario inválido: {row["Monto Tributario"]}')
+                                monto = None
+                            
+                            # Validar factor tributario
+                            try:
+                                factor = float(row['Factor Tributario'])
+                                if factor < 0:
+                                    errores_fila.append('Factor tributario no puede ser negativo')
+                            except (ValueError, TypeError):
+                                errores_fila.append(f'Factor tributario inválido: {row["Factor Tributario"]}')
+                                factor = None
+                            
+                            # Validar puntaje (0-100)
+                            try:
+                                puntaje = int(row['Puntaje de Calificación'])
+                                if puntaje < 0 or puntaje > 100:
+                                    errores_fila.append('Puntaje debe estar entre 0 y 100')
+                            except (ValueError, TypeError):
+                                errores_fila.append(f'Puntaje inválido: {row["Puntaje de Calificación"]}')
+                                puntaje = None
+                            
+                            # Validar categoría
+                            categoria_map = {
+                                'bajo': 'bajo',
+                                'medio': 'medio',
+                                'alto': 'alto',
+                                'BAJO': 'bajo',
+                                'MEDIO': 'medio',
+                                'ALTO': 'alto',
+                                'Bajo': 'bajo',
+                                'Medio': 'medio',
+                                'Alto': 'alto'
+                            }
+                            categoria_valor = str(row['Categoría de la Calificación']).strip()
+                            if categoria_valor not in categoria_map:
+                                errores_fila.append(f'Categoría inválida: {categoria_valor}. Debe ser: Bajo, Medio o Alto')
+                                categoria = None
+                            else:
+                                categoria = categoria_map[categoria_valor]
+                            
+                            # Validar nivel de riesgo
+                            riesgo_map = {
+                                'bajo': 'bajo',
+                                'medio': 'medio',
+                                'alto': 'alto',
+                                'critico': 'critico',
+                                'crítico': 'critico',
+                                'BAJO': 'bajo',
+                                'MEDIO': 'medio',
+                                'ALTO': 'alto',
+                                'CRITICO': 'critico',
+                                'CRÍTICO': 'critico',
+                                'Bajo': 'bajo',
+                                'Medio': 'medio',
+                                'Alto': 'alto',
+                                'Critico': 'critico',
+                                'Crítico': 'critico'
+                            }
+                            riesgo_valor = str(row['Nivel de Riesgo']).strip()
+                            if riesgo_valor not in riesgo_map:
+                                errores_fila.append(f'Nivel de riesgo inválido: {riesgo_valor}. Debe ser: Bajo, Medio, Alto o Crítico')
+                                riesgo = None
+                            else:
+                                riesgo = riesgo_map[riesgo_valor]
+                            
+                            # Agregar datos procesados
+                            datos_procesados.append({
+                                'fila': index + 2,  # +2 porque Excel empieza en 1 y tiene header
+                                'rut_empresa': rut_formateado if rut_formateado else rut_empresa_valor,
+                                'nombre_empresa': str(row['Nombre de la Empresa']).strip() if pd.notna(row['Nombre de la Empresa']) else '',
+                                'anio_tributario': anio,
+                                'tipo_calificacion': str(row['Tipo de Calificacion']).strip() if pd.notna(row['Tipo de Calificacion']) else '',
+                                'monto_tributario': monto,
+                                'factor_tributario': factor,
+                                'unidad_valor': str(row['Unidad de Valor']).strip() if pd.notna(row['Unidad de Valor']) else '',
+                                'puntaje_calificacion': puntaje,
+                                'categoria_calificacion': categoria,
+                                'nivel_riesgo': riesgo,
+                                'justificacion_resultado': str(row['Justificación del resultado (Observaciones)']).strip() if pd.notna(row['Justificación del resultado (Observaciones)']) else '',
+                                'errores': errores_fila,
+                                'valido': len(errores_fila) == 0
+                            })
+                        
+                        if filas_procesadas == 0:
+                            errores_globales.append('No se encontraron filas válidas con datos en el archivo.')
+                            
+            except Exception as e:
+                errores_globales.append(f'Error al procesar el archivo: {str(e)}')
+    
+    context = {
+        'datos_procesados': datos_procesados,
+        'errores_globales': errores_globales,
+        'archivo_nombre': archivo_nombre,
+        'total_registros': len(datos_procesados),
+        'registros_validos': sum(1 for d in datos_procesados if d['valido']),
+        'registros_con_errores': sum(1 for d in datos_procesados if not d['valido']),
+    }
+    
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/carga_masiva.html', context)

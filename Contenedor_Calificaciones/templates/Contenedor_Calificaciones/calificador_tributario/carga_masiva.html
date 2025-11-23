@@ -1,0 +1,206 @@
+{% extends 'Contenedor_Calificaciones/base_calificador.html' %}
+{% load static %}
+
+{% block title %}Carga Masiva - Calificador Tributario{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-orange mb-4">Carga de calificaciones tributarias</h2>
+            
+            <!-- Formulario de carga -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="formCargaExcel">
+                        {% csrf_token %}
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="archivo_excel" 
+                                           name="archivo_excel" 
+                                           accept=".xlsx,.xls"
+                                           required>
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="bi bi-upload"></i> Cargar Archivo
+                                    </button>
+                                </div>
+                                <small class="text-muted">Formatos aceptados: .xlsx, .xls (Máximo 10 calificaciones)</small>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <a href="#" class="btn btn-orange">
+                                    <i class="bi bi-download"></i> Descargar plantilla
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Errores globales -->
+            {% if errores_globales %}
+            <div class="alert alert-danger" role="alert">
+                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Advertencia</h5>
+                <ul class="mb-0">
+                    {% for error in errores_globales %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Resumen de carga -->
+            {% if archivo_nombre %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Archivo cargado: <span class="text-muted">{{ archivo_nombre }}</span></h5>
+                    <div class="row text-center mt-3">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded">
+                                <h3 class="text-primary">{{ total_registros }}</h3>
+                                <p class="mb-0">Total de registros</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded">
+                                <h3 class="text-success">{{ registros_validos }}</h3>
+                                <p class="mb-0">Registros válidos</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded">
+                                <h3 class="text-danger">{{ registros_con_errores }}</h3>
+                                <p class="mb-0">Con errores</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Tabla de datos procesados -->
+            {% if datos_procesados %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-orange text-white">
+                    <h5 class="mb-0">Resumen de la Carga</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center" style="width: 60px;">Fila</th>
+                                    <th>RUT Empresa</th>
+                                    <th>Nombre Empresa</th>
+                                    <th class="text-center">Año</th>
+                                    <th>Tipo Calificación</th>
+                                    <th class="text-end">Monto</th>
+                                    <th class="text-end">Factor</th>
+                                    <th class="text-center">Unidad</th>
+                                    <th class="text-center">Puntaje</th>
+                                    <th class="text-center">Categoría</th>
+                                    <th class="text-center">Riesgo</th>
+                                    <th>Observaciones</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dato in datos_procesados %}
+                                <tr class="{% if not dato.valido %}table-danger{% endif %}">
+                                    <td class="text-center">{{ dato.fila }}</td>
+                                    <td>{{ dato.rut_empresa }}</td>
+                                    <td>{{ dato.nombre_empresa }}</td>
+                                    <td class="text-center">{{ dato.anio_tributario|default:"-" }}</td>
+                                    <td>{{ dato.tipo_calificacion }}</td>
+                                    <td class="text-end">{{ dato.monto_tributario|floatformat:2|default:"-" }}</td>
+                                    <td class="text-end">{{ dato.factor_tributario|floatformat:2|default:"-" }}</td>
+                                    <td class="text-center">{{ dato.unidad_valor }}</td>
+                                    <td class="text-center">{{ dato.puntaje_calificacion|default:"-" }}</td>
+                                    <td class="text-center">
+                                        {% if dato.categoria_calificacion %}
+                                            <span class="badge bg-secondary">{{ dato.categoria_calificacion|upper }}</span>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if dato.nivel_riesgo %}
+                                            {% if dato.nivel_riesgo == 'bajo' %}
+                                                <span class="badge bg-success">BAJO</span>
+                                            {% elif dato.nivel_riesgo == 'medio' %}
+                                                <span class="badge bg-warning text-dark">MEDIO</span>
+                                            {% elif dato.nivel_riesgo == 'alto' %}
+                                                <span class="badge bg-danger">ALTO</span>
+                                            {% elif dato.nivel_riesgo == 'critico' %}
+                                                <span class="badge bg-dark">CRÍTICO</span>
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ dato.justificacion_resultado|truncatewords:10 }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if dato.valido %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Válido
+                                            </span>
+                                        {% else %}
+                                            <button type="button" 
+                                                    class="badge bg-danger border-0" 
+                                                    data-bs-toggle="popover" 
+                                                    data-bs-trigger="hover" 
+                                                    data-bs-placement="left"
+                                                    data-bs-html="true"
+                                                    data-bs-content="<ul class='text-start mb-0'>{% for error in dato.errores %}<li>{{ error }}</li>{% endfor %}</ul>">
+                                                <i class="bi bi-exclamation-triangle"></i> Error
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-orange {
+        color: #ff6b35;
+    }
+    .bg-orange {
+        background-color: #ff6b35;
+    }
+    .btn-orange {
+        background-color: #ff6b35;
+        color: white;
+        border: none;
+    }
+    .btn-orange:hover {
+        background-color: #e55a2b;
+        color: white;
+    }
+    .navbar-dark {
+        background-color: #ff6b35;
+    }
+</style>
+
+<script>
+    // Activar popovers de Bootstrap
+    document.addEventListener('DOMContentLoaded', function() {
+        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+        var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+            return new bootstrap.Popover(popoverTriggerEl);
+        });
+    });
+</script>
+{% endblock %}
