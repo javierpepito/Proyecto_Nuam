@@ -304,30 +304,42 @@ def carga_masiva_view(request):
                 if df.empty:
                     errores_globales.append('El archivo Excel está vacío.')
                 else:
-                    # Mapeo de columnas esperadas (según tu imagen del Excel)
-                    columnas_esperadas = {
-                        'Nº': 'numero',
-                        'RUT de la Empresa': 'rut_empresa',
-                        'Nombre de la Empresa': 'nombre_empresa',
-                        'Año Tributario': 'anio_tributario',
-                        'Tipo de Calificacion': 'tipo_calificacion',
-                        'Monto Tributario': 'monto_tributario',
-                        'Factor Tributario': 'factor_tributario',
-                        'Unidad de Valor': 'unidad_valor',
-                        'Puntaje de Calificación': 'puntaje_calificacion',
-                        'Categoría de la Calificación': 'categoria_calificacion',
-                        'Nivel de Riesgo': 'nivel_riesgo',
-                        'Justificación del resultado (Observaciones)': 'justificacion_resultado'
-                    }
-                    
-                    # Renombrar columnas para trabajar más fácil
+                    # Normalizar nombres de columnas (quitar espacios extra)
                     df.columns = df.columns.str.strip()
                     
-                    # Validar que existan las columnas necesarias
+                    # Función helper para encontrar columna (tolera variaciones de tildes)
+                    def encontrar_columna(df, posibles_nombres):
+                        for nombre in posibles_nombres:
+                            if nombre in df.columns:
+                                return nombre
+                        return None
+                    
+                    # Mapeo flexible de columnas
+                    col_rut = encontrar_columna(df, ['RUT de la Empresa'])
+                    col_nombre = encontrar_columna(df, ['Nombre de la Empresa'])
+                    col_anio = encontrar_columna(df, ['Año Tributario'])
+                    col_tipo = encontrar_columna(df, ['Tipo de Calificación', 'Tipo de Calificacion'])
+                    col_monto = encontrar_columna(df, ['Monto Tributario'])
+                    col_factor = encontrar_columna(df, ['Factor Tributario'])
+                    col_unidad = encontrar_columna(df, ['Unidad de Valor'])
+                    col_puntaje = encontrar_columna(df, ['Puntaje de Calificación', 'Puntaje de Calificacion'])
+                    col_categoria = encontrar_columna(df, ['Categoría de la Calificación', 'Categoria de la Calificación', 'Categoría de la Calificacion', 'Categoria de la Calificacion'])
+                    col_riesgo = encontrar_columna(df, ['Nivel de Riesgo'])
+                    col_justificacion = encontrar_columna(df, ['Justificación del resultado (Observaciones)', 'Justificacion del resultado (Observaciones)'])
+                    
+                    # Validar que existan todas las columnas necesarias
                     columnas_faltantes = []
-                    for col_excel in columnas_esperadas.keys():
-                        if col_excel not in df.columns:
-                            columnas_faltantes.append(col_excel)
+                    if not col_rut: columnas_faltantes.append('RUT de la Empresa')
+                    if not col_nombre: columnas_faltantes.append('Nombre de la Empresa')
+                    if not col_anio: columnas_faltantes.append('Año Tributario')
+                    if not col_tipo: columnas_faltantes.append('Tipo de Calificación')
+                    if not col_monto: columnas_faltantes.append('Monto Tributario')
+                    if not col_factor: columnas_faltantes.append('Factor Tributario')
+                    if not col_unidad: columnas_faltantes.append('Unidad de Valor')
+                    if not col_puntaje: columnas_faltantes.append('Puntaje de Calificación')
+                    if not col_categoria: columnas_faltantes.append('Categoría de la Calificación')
+                    if not col_riesgo: columnas_faltantes.append('Nivel de Riesgo')
+                    if not col_justificacion: columnas_faltantes.append('Justificación del resultado (Observaciones)')
                     
                     if columnas_faltantes:
                         errores_globales.append(f"Faltan columnas en el Excel: {', '.join(columnas_faltantes)}")
@@ -337,7 +349,7 @@ def carga_masiva_view(request):
                         
                         for index, row in df.iterrows():
                             # Saltar filas vacías
-                            if pd.isna(row['RUT de la Empresa']) or str(row['RUT de la Empresa']).strip() == '':
+                            if pd.isna(row[col_rut]) or str(row[col_rut]).strip() == '':
                                 continue
                             
                             if filas_procesadas >= 10:
@@ -348,7 +360,9 @@ def carga_masiva_view(request):
                             errores_fila = []
                             
                             # Validar RUT empresa (debe existir en BD)
-                            rut_empresa_valor = str(row['RUT de la Empresa']).strip()
+                            rut_empresa_valor = str(row[col_rut]).strip()
+                            nombre_empresa_excel = str(row[col_nombre]).strip() if pd.notna(row[col_nombre]) else ''
+
                             try:
                                 validate_rut_chileno(rut_empresa_valor)
                                 rut_formateado = formatear_rut(rut_empresa_valor)
@@ -356,6 +370,18 @@ def carga_masiva_view(request):
                                 
                                 if not empresa:
                                     errores_fila.append(f'Empresa con RUT {rut_formateado} no está registrada.')
+                                else:
+                                    # Validar que el nombre coincida (normalizar para comparación)
+                                    nombre_bd = empresa.nombre_empresa.strip().lower()
+                                    nombre_excel = nombre_empresa_excel.strip().lower()
+                                    
+                                    # Comparación exacta (sin distinguir mayúsculas/minúsculas)
+                                    if nombre_bd != nombre_excel:
+                                        errores_fila.append(
+                                            f'El nombre "{nombre_empresa_excel}" no coincide con la empresa registrada para el RUT {rut_formateado}.'
+                                        )
+                                        empresa = None  # Marcar como inválida
+                                        
                             except ValidationError as e:
                                 errores_fila.append(f'RUT inválido: {rut_empresa_valor}')
                                 rut_formateado = rut_empresa_valor
@@ -363,78 +389,62 @@ def carga_masiva_view(request):
                             
                             # Validar año tributario
                             try:
-                                anio = int(row['Año Tributario'])
+                                anio = int(row[col_anio])
                                 if anio < 1900 or anio > timezone.now().year:
                                     errores_fila.append(f'Año tributario {anio} fuera de rango (1900-{timezone.now().year})')
                             except (ValueError, TypeError):
-                                errores_fila.append(f'Año tributario inválido: {row["Año Tributario"]}')
+                                errores_fila.append(f'Año tributario inválido: {row[col_anio]}')
                                 anio = None
                             
                             # Validar monto tributario
                             try:
-                                monto = float(row['Monto Tributario'])
+                                monto = float(row[col_monto])
                                 if monto < 0:
                                     errores_fila.append('Monto tributario no puede ser negativo')
                             except (ValueError, TypeError):
-                                errores_fila.append(f'Monto tributario inválido: {row["Monto Tributario"]}')
+                                errores_fila.append(f'Monto tributario inválido: {row[col_monto]}')
                                 monto = None
                             
                             # Validar factor tributario
                             try:
-                                factor = float(row['Factor Tributario'])
+                                factor = float(row[col_factor])
                                 if factor < 0:
                                     errores_fila.append('Factor tributario no puede ser negativo')
                             except (ValueError, TypeError):
-                                errores_fila.append(f'Factor tributario inválido: {row["Factor Tributario"]}')
+                                errores_fila.append(f'Factor tributario inválido: {row[col_factor]}')
                                 factor = None
                             
                             # Validar puntaje (0-100)
                             try:
-                                puntaje = int(row['Puntaje de Calificación'])
+                                puntaje = int(row[col_puntaje])
                                 if puntaje < 0 or puntaje > 100:
                                     errores_fila.append('Puntaje debe estar entre 0 y 100')
                             except (ValueError, TypeError):
-                                errores_fila.append(f'Puntaje inválido: {row["Puntaje de Calificación"]}')
+                                errores_fila.append(f'Puntaje inválido: {row[col_puntaje]}')
                                 puntaje = None
                             
                             # Validar categoría
                             categoria_map = {
-                                'bajo': 'bajo',
-                                'medio': 'medio',
-                                'alto': 'alto',
-                                'BAJO': 'bajo',
-                                'MEDIO': 'medio',
-                                'ALTO': 'alto',
-                                'Bajo': 'bajo',
-                                'Medio': 'medio',
-                                'Alto': 'alto'
+                                'A': 'alto', 'B': 'medio', 'C': 'bajo',  
+                                'a': 'alto', 'b': 'medio', 'c': 'bajo',  
+                                'bajo': 'bajo', 'medio': 'medio', 'alto': 'alto',
+                                'BAJO': 'bajo', 'MEDIO': 'medio', 'ALTO': 'alto',
+                                'Bajo': 'bajo', 'Medio': 'medio', 'Alto': 'alto'
                             }
-                            categoria_valor = str(row['Categoría de la Calificación']).strip()
+                            categoria_valor = str(row[col_categoria]).strip()
                             if categoria_valor not in categoria_map:
-                                errores_fila.append(f'Categoría inválida: {categoria_valor}. Debe ser: Bajo, Medio o Alto')
+                                errores_fila.append(f'Categoría inválida: {categoria_valor}. Debe ser: A, B, C o Bajo, Medio, Alto')
                                 categoria = None
                             else:
                                 categoria = categoria_map[categoria_valor]
                             
                             # Validar nivel de riesgo
                             riesgo_map = {
-                                'bajo': 'bajo',
-                                'medio': 'medio',
-                                'alto': 'alto',
-                                'critico': 'critico',
-                                'crítico': 'critico',
-                                'BAJO': 'bajo',
-                                'MEDIO': 'medio',
-                                'ALTO': 'alto',
-                                'CRITICO': 'critico',
-                                'CRÍTICO': 'critico',
-                                'Bajo': 'bajo',
-                                'Medio': 'medio',
-                                'Alto': 'alto',
-                                'Critico': 'critico',
-                                'Crítico': 'critico'
+                                'bajo': 'bajo', 'medio': 'medio', 'alto': 'alto', 'critico': 'critico', 'crítico': 'critico',
+                                'BAJO': 'bajo', 'MEDIO': 'medio', 'ALTO': 'alto', 'CRITICO': 'critico', 'CRÍTICO': 'critico',
+                                'Bajo': 'bajo', 'Medio': 'medio', 'Alto': 'alto', 'Critico': 'critico', 'Crítico': 'critico'
                             }
-                            riesgo_valor = str(row['Nivel de Riesgo']).strip()
+                            riesgo_valor = str(row[col_riesgo]).strip()
                             if riesgo_valor not in riesgo_map:
                                 errores_fila.append(f'Nivel de riesgo inválido: {riesgo_valor}. Debe ser: Bajo, Medio, Alto o Crítico')
                                 riesgo = None
@@ -445,16 +455,16 @@ def carga_masiva_view(request):
                             datos_procesados.append({
                                 'fila': index + 2,  # +2 porque Excel empieza en 1 y tiene header
                                 'rut_empresa': rut_formateado if rut_formateado else rut_empresa_valor,
-                                'nombre_empresa': str(row['Nombre de la Empresa']).strip() if pd.notna(row['Nombre de la Empresa']) else '',
+                                'nombre_empresa': str(row[col_nombre]).strip() if pd.notna(row[col_nombre]) else '',
                                 'anio_tributario': anio,
-                                'tipo_calificacion': str(row['Tipo de Calificacion']).strip() if pd.notna(row['Tipo de Calificacion']) else '',
+                                'tipo_calificacion': str(row[col_tipo]).strip() if pd.notna(row[col_tipo]) else '',
                                 'monto_tributario': monto,
                                 'factor_tributario': factor,
-                                'unidad_valor': str(row['Unidad de Valor']).strip() if pd.notna(row['Unidad de Valor']) else '',
+                                'unidad_valor': str(row[col_unidad]).strip() if pd.notna(row[col_unidad]) else '',
                                 'puntaje_calificacion': puntaje,
                                 'categoria_calificacion': categoria,
                                 'nivel_riesgo': riesgo,
-                                'justificacion_resultado': str(row['Justificación del resultado (Observaciones)']).strip() if pd.notna(row['Justificación del resultado (Observaciones)']) else '',
+                                'justificacion_resultado': str(row[col_justificacion]).strip() if pd.notna(row[col_justificacion]) else '',
                                 'errores': errores_fila,
                                 'valido': len(errores_fila) == 0
                             })

@@ -23,7 +23,7 @@
                                            name="archivo_excel" 
                                            accept=".xlsx,.xls"
                                            required>
-                                    <button class="btn btn-outline-secondary" type="submit">
+                                    <button class="btn btn-orange text-white" type="submit">
                                         <i class="bi bi-upload"></i> Cargar Archivo
                                     </button>
                                 </div>
@@ -141,7 +141,17 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <small>{{ dato.justificacion_resultado|truncatewords:10 }}</small>
+                                        {% if dato.justificacion_resultado|length > 50 %}
+                                            <small class="text-truncate d-inline-block" 
+                                                style="max-width: 200px; cursor: help;"
+                                                data-bs-toggle="tooltip" 
+                                                data-bs-placement="top"
+                                                title="{{ dato.justificacion_resultado }}">
+                                                {{ dato.justificacion_resultado }}
+                                            </small>
+                                        {% else %}
+                                            <small>{{ dato.justificacion_resultado }}</small>
+                                        {% endif %}
                                     </td>
                                     <td class="text-center">
                                         {% if dato.valido %}
