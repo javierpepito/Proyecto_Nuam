@@ -474,10 +474,6 @@ class CalificacionTributaria(models.Model):
         """
         from django.core.exceptions import ValidationError
         
-        # Auto-completar nombre_empresa desde la FK
-        if self.rut_empresa and not self.nombre_empresa:
-            self.nombre_empresa = self.rut_empresa.nombre_empresa
-        
         # Validar que el año tributario no sea futuro
         if self.anio_tributario and self.anio_tributario > timezone.now().year:
             raise ValidationError({

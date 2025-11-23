@@ -239,6 +239,7 @@ def agregar_calificacion(request):
             
             # CRÍTICO: Asignar la FK ANTES de cualquier validación o guardado
             calificacion.rut_empresa = empresa
+            calificacion.nombre_empresa = empresa.nombre_empresa 
             calificacion.cuenta_id = cuenta
             calificacion.metodo_calificacion = 'manual'
             
