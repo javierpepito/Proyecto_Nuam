@@ -1,0 +1,348 @@
+{% extends 'Contenedor_Calificaciones/base.html' %}
+{% load static %}
+{% block title %}Crear Cuenta{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background-color: #FF7043;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
+    .registro-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px;
+    }
+    .logo-section {
+        margin-bottom: 30px;
+    }
+    .logo-section img {
+        max-width: 350px;
+        height: auto;
+    }
+    .registro-card {
+        background-color: #F5F5F5;
+        border-radius: 40px;
+        padding: 50px 60px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        max-width: 1100px;
+        width: 100%;
+    }
+    .registro-title {
+        color: #FF7043;
+        font-weight: bold;
+        font-size: 2.5rem;
+        text-align: center;
+        margin-bottom: 50px;
+        text-transform: uppercase;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .form-label {
+        color: #FF7043;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+    }
+    .form-control, .password-input {
+        background-color: white;
+        border: 2px solid #FFB088;
+        border-radius: 20px;
+        padding: 14px 20px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    .form-control:focus, .password-input:focus {
+        outline: none;
+        border-color: #FF7043;
+        box-shadow: 0 0 0 3px rgba(255, 112, 67, 0.15);
+    }
+    .form-control::placeholder, .password-input::placeholder {
+        color: #BDBDBD;
+    }
+    .password-wrapper {
+        position: relative;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #FF7043;
+        font-size: 1.3rem;
+    }
+    .btn-crear {
+        background-color: white;
+        color: #FF7043;
+        border: 3px solid #FF7043;
+        border-radius: 20px;
+        padding: 15px 50px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        display: block;
+        margin: 40px auto 0;
+    }
+    .btn-crear:hover {
+        background-color: #FF7043;
+        color: white;
+    }
+    .alert-custom {
+        background-color: #FFEBEE;
+        border: 2px solid #FF5252;
+        border-radius: 15px;
+        padding: 12px;
+        margin-bottom: 20px;
+        color: #C62828;
+        text-align: center;
+        font-size: 0.95rem;
+    }
+    .error-text {
+        color: #FF5252;
+        font-size: 0.85rem;
+        margin-top: 5px;
+    }
+    .icon-input {
+        position: relative;
+    }
+    .icon-input i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #FF7043;
+        font-size: 1.1rem;
+    }
+    .icon-input .form-control {
+        padding-left: 45px;
+    }
+    @media (max-width: 1024px) {
+        .form-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        .registro-card {
+            padding: 40px 30px;
+        }
+    }
+</style>
+
+<div class="registro-container">
+    <div class="logo-section">
+        <img src="{% static 'Contenedor_Calificaciones/images/logoNuam.png' %}" alt="Nuam Logo">
+    </div>
+    
+    <div class="registro-card">
+        <h1 class="registro-title">Crea Tu Cuenta</h1>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert-custom">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        
+        {% if form.non_field_errors %}
+            <div class="alert-custom">{{ form.non_field_errors }}</div>
+        {% endif %}
+        
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <!-- RUT -->
+                <div class="form-group">
+                    <label class="form-label" for="id_rut">Rut</label>
+                    <div class="icon-input">
+                        <i class="bi bi-card-text"></i>
+                        {{ form.rut }}
+                    </div>
+                    {% if form.rut.errors %}
+                        <span class="error-text">{{ form.rut.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Nombre -->
+                <div class="form-group">
+                    <label class="form-label" for="id_nombre">Nombre</label>
+                    <div class="icon-input">
+                        <i class="bi bi-person"></i>
+                        {{ form.nombre }}
+                    </div>
+                    {% if form.nombre.errors %}
+                        <span class="error-text">{{ form.nombre.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Apellido -->
+                <div class="form-group">
+                    <label class="form-label" for="id_apellido">Apellido</label>
+                    <div class="icon-input">
+                        <i class="bi bi-person"></i>
+                        {{ form.apellido }}
+                    </div>
+                    {% if form.apellido.errors %}
+                        <span class="error-text">{{ form.apellido.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <!-- Dirección -->
+                <div class="form-group">
+                    <label class="form-label" for="id_direccion">Dirección</label>
+                    <div class="icon-input">
+                        <i class="bi bi-geo-alt"></i>
+                        {{ form.direccion }}
+                    </div>
+                    {% if form.direccion.errors %}
+                        <span class="error-text">{{ form.direccion.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Teléfono -->
+                <div class="form-group">
+                    <label class="form-label" for="id_telefono">Teléfono</label>
+                    <div class="icon-input">
+                        <i class="bi bi-telephone"></i>
+                        {{ form.telefono }}
+                    </div>
+                    {% if form.telefono.errors %}
+                        <span class="error-text">{{ form.telefono.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Edad -->
+                <div class="form-group">
+                    <label class="form-label" for="id_edad">Edad</label>
+                    <div class="icon-input">
+                        <i class="bi bi-calendar"></i>
+                        {{ form.edad }}
+                    </div>
+                    {% if form.edad.errors %}
+                        <span class="error-text">{{ form.edad.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <!-- Correo -->
+                <div class="form-group">
+                    <label class="form-label" for="id_correo">Correo</label>
+                    <div class="icon-input">
+                        <i class="bi bi-envelope"></i>
+                        {{ form.correo }}
+                    </div>
+                    {% if form.correo.errors %}
+                        <span class="error-text">{{ form.correo.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Contraseña -->
+                <div class="form-group">
+                    <label class="form-label" for="id_contrasena">Contraseña</label>
+                    <div class="password-wrapper">
+                        <div class="icon-input">
+                            <i class="bi bi-lock"></i>
+                            {{ form.contrasena }}
+                        </div>
+                        <i class="bi bi-eye password-toggle" id="togglePassword"></i>
+                    </div>
+                    {% if form.contrasena.errors %}
+                        <span class="error-text">{{ form.contrasena.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Confirmar Contraseña -->
+                <div class="form-group">
+                    <label class="form-label" for="id_confirmar_contrasena">Confirmar Contraseña</label>
+                    <div class="password-wrapper">
+                        <div class="icon-input">
+                            <i class="bi bi-lock"></i>
+                            {{ form.confirmar_contrasena }}
+                        </div>
+                        <i class="bi bi-eye password-toggle" id="toggleConfirmPassword"></i>
+                    </div>
+                    {% if form.confirmar_contrasena.errors %}
+                        <span class="error-text">{{ form.confirmar_contrasena.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-crear">Crear Cuenta</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Validación de teléfono en tiempo real
+    const telefonoInput = document.getElementById('id_telefono');
+    
+    telefonoInput.addEventListener('input', function(e) {
+        // Eliminar todo lo que no sea número
+        let valor = e.target.value.replace(/\D/g, '');
+        
+        // Limitar a 9 dígitos
+        if (valor.length > 9) {
+            valor = valor.substring(0, 9);
+        }
+        
+        e.target.value = valor;
+        
+        // Validar en tiempo real
+        if (valor.length > 0 && valor.length < 9) {
+            e.target.style.borderColor = '#FFA000';
+        } else if (valor.length === 9) {
+            if (valor.startsWith('9')) {
+                e.target.style.borderColor = '#4CAF50';
+            } else {
+                e.target.style.borderColor = '#FF5252';
+            }
+        } else {
+            e.target.style.borderColor = '#FFB088';
+        }
+    });
+    
+    telefonoInput.addEventListener('blur', function(e) {
+        const valor = e.target.value;
+        if (valor.length === 9 && valor.startsWith('9')) {
+            e.target.style.borderColor = '#FF7043';
+        }
+    });
+    
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('id_contrasena');
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.classList.toggle('bi-eye');
+        this.classList.toggle('bi-eye-slash');
+    });
+    
+    document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+        const passwordInput = document.getElementById('id_confirmar_contrasena');
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.classList.toggle('bi-eye');
+        this.classList.toggle('bi-eye-slash');
+    });
+</script>
+{% endblock %}

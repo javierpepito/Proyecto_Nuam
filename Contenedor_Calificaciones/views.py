@@ -5,7 +5,9 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from .models import Empresa, Cuenta, CalificacionTributaria
 from .forms import CalificacionTributariaForm
+from .forms import RegistroCuentaForm
 from .validators import validate_rut_chileno, formatear_rut
+from django.urls import reverse
 
 import pandas as pd
 from django.core.files.storage import default_storage
@@ -30,8 +32,7 @@ def Inicio_Jefe(request):
     return render(request, 'Contenedor_Calificaciones/jefe_tributario/inicio_jefe.html')
 
 def identificacion_view(request):
-    """Primera etapa: solicita solo el RUT y redirige a login para ingresar contraseña.
-    Si el RUT no existe, se marca bandera para mostrar mensaje en login."""
+    """Primera etapa: solicita solo el RUT y redirige según corresponda."""
     mensaje = None
     if request.method == 'POST':
         rut_input = request.POST.get('rut', '').strip()
@@ -41,23 +42,30 @@ def identificacion_view(request):
                 validate_rut_chileno(rut_input)
                 rut_formateado = formatear_rut(rut_input)
             except ValidationError:
-                # Mantener tal cual si inválido; login mostrará mensaje de no afiliado
                 rut_formateado = rut_input
-            request.session['rut_identificado'] = rut_formateado
-            cuenta = Cuenta.objects.filter(rut=rut_formateado).first()
-            if cuenta:
-                request.session['nombre_identificado'] = cuenta.nombre
-                request.session['apellido_identificado'] = cuenta.apellido
-                request.session['cuenta_rol'] = cuenta.rol
+
+            # Verifica si el RUT existe en la base de datos de personas autorizadas
+            persona = Cuenta.objects.filter(rut=rut_formateado).first()
+            if persona:
+                # Ya tiene cuenta, va a login
+                request.session['rut_identificado'] = rut_formateado
+                request.session['nombre_identificado'] = persona.nombre
+                request.session['apellido_identificado'] = persona.apellido
+                request.session['cuenta_rol'] = persona.rol
                 request.session.pop('rut_invalido', None)
+                request.session['login_attempts'] = 0
+                request.session.pop('login_block_until', None)
+                return redirect('login')
             else:
-                request.session['nombre_identificado'] = None
-                request.session['apellido_identificado'] = None
-                request.session['rut_invalido'] = True
-            # Reiniciar intentos y bloqueo al iniciar nueva identificación
-            request.session['login_attempts'] = 0
-            request.session.pop('login_block_until', None)
-            return redirect('login')
+                # Buscar si el rut está autorizado (en CalificadorTributario o JefeEquipo)
+                from .models import CalificadorTributario, JefeEquipo
+                autorizado = CalificadorTributario.objects.filter(rut=rut_formateado).exists() or JefeEquipo.objects.filter(rut=rut_formateado).exists()
+                if autorizado:
+                    # No tiene cuenta, va a crear cuenta
+                    return redirect(f"{reverse('registro')}?rut={rut_formateado}")
+                else:
+                    # No está autorizado
+                    mensaje = 'El RUT ingresado no está autorizado. Contacte al administrador.'
         else:
             mensaje = 'Debe ingresar un RUT.'
     return render(request, 'Contenedor_Calificaciones/identificacion.html', {'mensaje': mensaje})
@@ -485,3 +493,21 @@ def carga_masiva_view(request):
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/carga_masiva.html', context)
+
+def registro_view(request):
+    """Vista para registro de nueva cuenta"""
+    if request.method == 'POST':
+        form = RegistroCuentaForm(request.POST)
+        if form.is_valid():
+            try:
+                cuenta = form.save()
+                messages.success(request, '¡Cuenta creada exitosamente! Ya puedes iniciar sesión.')
+                return redirect('login')
+            except Exception as e:
+                messages.error(request, f'Error al crear la cuenta: {str(e)}')
+        else:
+            messages.error(request, 'Por favor, corrija los errores en el formulario.')
+    else:
+        form = RegistroCuentaForm()
+    
+    return render(request, 'Contenedor_Calificaciones/registro.html', {'form': form})

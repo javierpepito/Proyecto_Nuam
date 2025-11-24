@@ -1,7 +1,8 @@
 from django import forms
-from .models import CalificacionTributaria, Empresa
+from .models import CalificacionTributaria, Empresa, Cuenta, CalificadorTributario, JefeEquipo
 from .validators import validate_rut_chileno, formatear_rut
 from django.core.exceptions import ValidationError
+import re
 
 class CalificacionTributariaForm(forms.ModelForm):
     """
@@ -133,3 +134,236 @@ class CalificacionTributariaForm(forms.ModelForm):
             )
         
         return rut_formateado
+
+class EmpresaForm(forms.ModelForm):
+    """
+    Formulario para registrar empresas.
+    Valida RUT y evita duplicados.
+    """
+    class Meta:
+        model = Empresa
+        fields = ["empresa_rut", "nombre_empresa", "pais", "tipo_de_empresa"]
+        
+        widgets = {
+            'empresa_rut': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 12.345.678-9',
+                'id': 'id_empresa_rut'
+            }),
+            'nombre_empresa': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese el nombre de la empresa',
+                'id': 'id_nombre_empresa'
+            }),
+            'pais': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'id_pais'
+            }),
+            'tipo_de_empresa': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: S.A., Limitada, SPA',
+                'id': 'id_tipo_de_empresa'
+            }),
+        }
+        
+        labels = {
+            'empresa_rut': 'RUT Empresa',
+            'nombre_empresa': 'Nombre Empresa',
+            'pais': 'País',
+            'tipo_de_empresa': 'Tipo de Empresa',
+        }
+    
+    def clean_empresa_rut(self):
+        """Validar formato del RUT y que no exista ya"""
+        rut = self.cleaned_data.get('empresa_rut', '').strip()
+        
+        if not rut:
+            raise ValidationError('El RUT de la empresa es obligatorio.')
+        
+        try:
+            validate_rut_chileno(rut)
+            rut_formateado = formatear_rut(rut)
+        except ValidationError as e:
+            raise ValidationError(f'RUT inválido: {e.message}')
+        
+        # Verificar que no exista ya (solo en creación, no en edición)
+        if not self.instance.pk:
+            if Empresa.objects.filter(empresa_rut=rut_formateado).exists():
+                raise ValidationError(f'Ya existe una empresa registrada con el RUT {rut_formateado}.')
+        
+        return rut_formateado
+    
+    def clean_nombre_empresa(self):
+        """Capitalizar nombre de la empresa"""
+        nombre = self.cleaned_data.get("nombre_empresa", "")
+        return " ".join(p.capitalize() for p in nombre.strip().split())
+    
+    def clean_tipo_de_empresa(self):
+        """Capitalizar tipo de empresa"""
+        tipo = self.cleaned_data.get("tipo_de_empresa", "")
+        return tipo.strip().upper()  # Ej: S.A., LIMITADA, SPA
+
+class RegistroCuentaForm(forms.ModelForm):
+    """
+    Formulario para registro de nueva cuenta de usuario.
+    Valida que el RUT pertenezca a un trabajador de NUAM.
+    """
+    
+    # Campo adicional para confirmar contraseña
+    confirmar_contrasena = forms.CharField(
+        max_length=128,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control password-input',
+            'placeholder': 'Confirme su Contraseña',
+            'id': 'id_confirmar_contrasena'
+        }),
+        label='Confirmar Contraseña'
+    )
+    
+    class Meta:
+        model = Cuenta
+        fields = ['rut', 'nombre', 'apellido', 'direccion', 'telefono', 'edad', 'correo', 'contrasena']
+        widgets = {
+            'rut': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: 12.345.678-9',
+                'id': 'id_rut'
+            }),
+            'nombre': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese su Nombre',
+                'id': 'id_nombre'
+            }),
+            'apellido': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese su Apellido',
+                'id': 'id_apellido'
+            }),
+            'direccion': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese su Dirección',
+                'id': 'id_direccion'
+            }),
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '912345678',
+                'id': 'id_telefono',
+                'maxlength': '9',
+                'pattern': '[0-9]{9}',
+                'inputmode': 'numeric'
+            }),
+            'edad': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ingrese su Edad',
+                'min': '18',
+                'max': '100',
+                'id': 'id_edad'
+            }),
+            'correo': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'ejemplo@correo.com',
+                'id': 'id_correo'
+            }),
+            'contrasena': forms.PasswordInput(attrs={
+                'class': 'form-control password-input',
+                'placeholder': 'Ingrese su Contraseña',
+                'id': 'id_contrasena'
+            }),
+        }
+        labels = {
+            'rut': 'Rut',
+            'nombre': 'Nombre',
+            'apellido': 'Apellido',
+            'direccion': 'Dirección',
+            'telefono': 'Teléfono',
+            'edad': 'Edad',
+            'correo': 'Correo',
+            'contrasena': 'Contraseña',
+        }
+    
+    def clean_rut(self):
+        """Validar formato del RUT y que pertenezca a un trabajador de NUAM"""
+        rut = self.cleaned_data.get('rut', '').strip()
+        if not rut:
+            raise ValidationError('El RUT es obligatorio.')
+        
+        try:
+            validate_rut_chileno(rut)
+            rut_formateado = formatear_rut(rut)
+        except ValidationError as e:
+            raise ValidationError(f'RUT inválido: {e.message}')
+        
+        # Verificar que el RUT exista en CalificadorTributario o JefeEquipo
+        es_calificador = CalificadorTributario.objects.filter(rut=rut_formateado).exists()
+        es_jefe = JefeEquipo.objects.filter(rut=rut_formateado).exists()
+        
+        if not es_calificador and not es_jefe:
+            raise ValidationError('Este RUT no está registrado como trabajador de NUAM.')
+        
+        # Verificar que no tenga cuenta ya creada
+        if Cuenta.objects.filter(rut=rut_formateado).exists():
+            raise ValidationError('Ya existe una cuenta con este RUT.')
+        
+        return rut_formateado
+    
+    def clean_telefono(self):
+        """Validar que el teléfono tenga exactamente 9 dígitos"""
+        telefono = self.cleaned_data.get('telefono', '').strip()
+        
+        # Eliminar espacios, guiones y otros caracteres
+        telefono_limpio = re.sub(r'\D', '', telefono)
+        
+        if not telefono_limpio:
+            raise ValidationError('El teléfono es obligatorio.')
+        
+        if len(telefono_limpio) != 9:
+            raise ValidationError('El teléfono debe tener exactamente 9 dígitos.')
+        
+        if not telefono_limpio.isdigit():
+            raise ValidationError('El teléfono solo puede contener números.')
+        
+        # Validar que empiece con 9 (celulares chilenos)
+        if not telefono_limpio.startswith('9'):
+            raise ValidationError('El teléfono debe comenzar con 9.')
+        
+        return telefono_limpio
+    
+    def clean_edad(self):
+        """Validar que la edad sea válida"""
+        edad = self.cleaned_data.get('edad')
+        if edad:
+            if edad < 18:
+                raise ValidationError('Debes tener al menos 18 años.')
+            if edad > 100:
+                raise ValidationError('Por favor, ingresa una edad válida.')
+        return edad
+    
+    def clean_contrasena(self):
+        """Validar que la contraseña cumpla con los requisitos de seguridad"""
+        contrasena = self.cleaned_data.get('contrasena')
+        if contrasena:
+            if len(contrasena) < 8:
+                raise ValidationError('La contraseña debe tener al menos 8 caracteres.')
+            if not re.search(r'[A-Z]', contrasena):
+                raise ValidationError('La contraseña debe contener al menos una letra mayúscula.')
+            if not re.search(r'[a-z]', contrasena):
+                raise ValidationError('La contraseña debe contener al menos una letra minúscula.')
+            if not re.search(r'[0-9]', contrasena):
+                raise ValidationError('La contraseña debe contener al menos un número.')
+            if not re.search(r'[!@#$%^&*(),.?":{}|<>]', contrasena):
+                raise ValidationError('La contraseña debe contener al menos un símbolo especial.')
+        return contrasena
+    
+    def clean(self):
+        """Validar que las contraseñas coincidan"""
+        cleaned_data = super().clean()
+        contrasena = cleaned_data.get('contrasena')
+        confirmar = cleaned_data.get('confirmar_contrasena')
+        
+        if contrasena and confirmar:
+            if contrasena != confirmar:
+                raise ValidationError({
+                    'confirmar_contrasena': 'Las contraseñas no coinciden.'
+                })
+        
+        return cleaned_data

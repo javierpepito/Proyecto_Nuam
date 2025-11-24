@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path("", views.identificacion_view, name="identificacion"),  # Home: ingreso de RUT
     path("login/", views.login_view, name="login"),
+    path("registro/", views.registro_view, name="registro"),
     path("inicio_calificador/", views.Inicio_Calificador, name="Inicio_Calificador"),
     path("registrar_empresa/", views.registrar_empresa, name="registrar_empresa"),
     path("empresas/", views.lista_empresas, name="lista_empresas"),

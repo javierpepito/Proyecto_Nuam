@@ -5,92 +5,169 @@
 
 {% block content %}
 <style>
+    body {
+        background-color: #f5f5f5;
+    }
     .registro-container {
         min-height: calc(100vh - 80px);
-        background-color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 40px 20px;
     }
+    
     .registro-card {
-        background: rgb(255, 255, 255);
+        background: white;
         border-radius: 30px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        padding: 70px 60px;
-        max-width: 800px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        padding: 60px 70px;
+        max-width: 750px;
         width: 100%;
+        position: relative;
     }
+    
     .registro-header {
         text-align: center;
         margin-bottom: 50px;
+        position: relative;
     }
+    
+    /* Ícono flotante - Alineado con el título en altura */
+    .btn-ver-empresas-icon {
+        position: absolute;
+        top: 0;
+        right: -10px;
+        background: linear-gradient(135deg, #FF7043 0%, #FF5722 100%);
+        color: white;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 1.2rem;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(255, 112, 67, 0.3);
+        z-index: 10;
+    }
+    .btn-ver-empresas-icon:hover {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 6px 25px rgba(255, 112, 67, 0.5);
+    }
+    
+    /* Tooltip al pasar el mouse */
+    .btn-ver-empresas-icon::after {
+        content: 'Ver Empresas';
+        position: absolute;
+        right: 55px;
+        background: #424242;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        font-weight: 500;
+    }
+    .btn-ver-empresas-icon:hover::after {
+        opacity: 1;
+    }
+    
     .registro-header h2 {
         color: #FF7043;
         font-weight: bold;
-        font-size: 2.5rem;
-        margin-bottom: 15px;
+        font-size: 2.2rem;
+        margin-bottom: 10px;
     }
     .registro-header p {
-        color: #6c757d;
-        font-size: 1.2rem;
+        color: #9E9E9E;
+        font-size: 1rem;
+    }
+    .form-group {
+        margin-bottom: 30px;
     }
     .form-label {
         color: #FF7043;
         font-weight: 600;
-        font-size: 1.1rem;
-        margin-bottom: 10px;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
     }
     .form-label i {
         margin-right: 8px;
+        font-size: 1rem;
     }
     .form-control, .form-select {
-        border: 2px solid #FFB088;
-        border-radius: 12px;
-        padding: 16px 20px;
-        font-size: 1.1rem;
+        border: none;
+        border-bottom: 2px solid #E0E0E0;
+        border-radius: 0;
+        padding: 12px 5px;
+        font-size: 1rem;
         transition: all 0.3s;
         width: 100%;
+        background-color: transparent;
+        box-shadow: none;
     }
     .form-control:focus, .form-select:focus {
-        border-color: #FF7043;
-        box-shadow: 0 0 0 3px rgba(255, 112, 67, 0.15);
+        border-bottom-color: #FF7043;
+        box-shadow: none;
         outline: none;
+        background-color: transparent;
+    }
+    .form-control::placeholder {
+        color: #BDBDBD;
+        font-size: 0.95rem;
+    }
+    .form-select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23FF7043' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        padding-right: 35px;
     }
     .btn-group-custom {
         display: flex;
         gap: 20px;
-        margin-top: 40px;
+        margin-top: 50px;
     }
     .btn-custom-primary {
         flex: 1;
         background-color: #FF7043;
         border: none;
         color: white;
-        padding: 18px 40px;
-        border-radius: 12px;
+        padding: 16px 40px;
+        border-radius: 25px;
         font-weight: 600;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .btn-custom-primary:hover {
         background-color: #FF5722;
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(255, 112, 67, 0.4);
+        box-shadow: 0 6px 20px rgba(255, 112, 67, 0.3);
     }
     .btn-custom-secondary {
         flex: 1;
         background: white;
         border: 2px solid #FF7043;
         color: #FF7043;
-        padding: 18px 40px;
-        border-radius: 12px;
+        padding: 16px 40px;
+        border-radius: 25px;
         font-weight: 600;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         transition: all 0.3s;
         text-decoration: none;
-        display: inline-block;
-        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .btn-custom-secondary:hover {
         background: #FF7043;
@@ -98,75 +175,131 @@
     }
     .alert-custom {
         background-color: #FFE5DD;
-        border: 2px solid #FF7043;
-        border-radius: 12px;
-        padding: 18px;
-        margin-bottom: 30px;
+        border-left: 4px solid #FF7043;
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
         color: #D84315;
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
     .text-danger {
-        color: #FF5722 !important;
-        font-size: 1rem;
-        margin-top: 8px;
+        color: #FF5252 !important;
+        font-size: 0.85rem;
+        margin-top: 5px;
         display: block;
     }
-    .mb-4 {
-        margin-bottom: 2rem !important;
+    .input-wrapper {
+        position: relative;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .registro-card {
+            padding: 40px 30px;
+        }
+        .btn-ver-empresas-icon {
+            top: -10px;
+        }
+        .btn-ver-empresas-icon::after {
+            display: none;
+        }
     }
 </style>
 
 <div class="registro-container">
     <div class="registro-card">
         <div class="registro-header">
+            <!-- Ícono flotante - Alineado con el título -->
+            <a href="{% url 'lista_empresas' %}" class="btn-ver-empresas-icon" title="Ver Empresas Registradas">
+                <i class="bi bi-list-ul"></i>
+            </a>
+            
             <h2>Registrar Nueva Empresa</h2>
             <p>Complete los datos de la empresa</p>
         </div>
 
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert-custom">
+                    <i class="bi bi-exclamation-circle me-2"></i>{{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
         {% if form.non_field_errors %}
             <div class="alert-custom">
-                {{ form.non_field_errors }}
+                <i class="bi bi-exclamation-circle me-2"></i>{{ form.non_field_errors }}
             </div>
         {% endif %}
 
         <form method="post" novalidate>
             {% csrf_token %}
             
-            <div class="mb-4">
+            <div class="form-group">
                 <label class="form-label" for="id_empresa_rut">
                     <i class="bi bi-card-text"></i> RUT Empresa
                 </label>
-                {{ form.empresa_rut }}
+                <div class="input-wrapper">
+                    <input type="text" 
+                           name="{{ form.empresa_rut.name }}" 
+                           id="id_empresa_rut" 
+                           class="form-control" 
+                           placeholder="12.345.678-9"
+                           value="{{ form.empresa_rut.value|default:'' }}">
+                </div>
                 {% if form.empresa_rut.errors %}
                     <small class="text-danger">{{ form.empresa_rut.errors.0 }}</small>
                 {% endif %}
             </div>
 
-            <div class="mb-4">
+            <div class="form-group">
                 <label class="form-label" for="id_nombre_empresa">
                     <i class="bi bi-building"></i> Nombre Empresa
                 </label>
-                {{ form.nombre_empresa }}
+                <div class="input-wrapper">
+                    <input type="text" 
+                           name="{{ form.nombre_empresa.name }}" 
+                           id="id_nombre_empresa" 
+                           class="form-control" 
+                           placeholder="Ingrese el nombre de la empresa"
+                           value="{{ form.nombre_empresa.value|default:'' }}">
+                </div>
                 {% if form.nombre_empresa.errors %}
                     <small class="text-danger">{{ form.nombre_empresa.errors.0 }}</small>
                 {% endif %}
             </div>
 
-            <div class="mb-4">
+            <div class="form-group">
                 <label class="form-label" for="id_pais">
                     <i class="bi bi-globe"></i> País
                 </label>
-                {{ form.pais }}
+                <select name="{{ form.pais.name }}" 
+                        id="id_pais" 
+                        class="form-select">
+                    <option value="">Seleccione un país</option>
+                    {% for value, label in form.pais.field.choices %}
+                        {% if value %}
+                            <option value="{{ value }}" {% if form.pais.value == value %}selected{% endif %}>{{ label }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
                 {% if form.pais.errors %}
                     <small class="text-danger">{{ form.pais.errors.0 }}</small>
                 {% endif %}
             </div>
 
-            <div class="mb-4">
+            <div class="form-group">
                 <label class="form-label" for="id_tipo_de_empresa">
                     <i class="bi bi-briefcase"></i> Tipo de Empresa
                 </label>
-                {{ form.tipo_de_empresa }}
+                <div class="input-wrapper">
+                    <input type="text" 
+                           name="{{ form.tipo_de_empresa.name }}" 
+                           id="id_tipo_de_empresa" 
+                           class="form-control" 
+                           placeholder="S.A., Limitada, SPA..."
+                           value="{{ form.tipo_de_empresa.value|default:'' }}">
+                </div>
                 {% if form.tipo_de_empresa.errors %}
                     <small class="text-danger">{{ form.tipo_de_empresa.errors.0 }}</small>
                 {% endif %}
@@ -176,11 +309,15 @@
                 <button type="submit" class="btn btn-custom-primary">
                     <i class="bi bi-check-circle me-2"></i>Guardar Empresa
                 </button>
-                <a href="{% url 'Inicio_Calificador' %}" class="btn btn-custom-secondary">
+                <a href="{% url 'Inicio_Calificador' %}" class="btn-custom-secondary">
                     <i class="bi bi-x-circle me-2"></i>Cancelar
                 </a>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    // ...existing code...
+</script>
 {% endblock %}
