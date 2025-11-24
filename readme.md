@@ -159,6 +159,9 @@ admin
 
 ### Cosas pendientes
 - Redireccion a tus empresas registradas (Filtro para mostrar empresas de una sola cuenta)
+- CLP, UF, UTM, UTA (Chile)
+- PEN, UIT, UVT (Peru)
+- COP, UVT, UVR, SMMLV, SMDLV (Colombia)
 
 ## Credenciales para uso en desarrollo
 - 21.086.922-0 Ragnar7m7., (Jefe)
