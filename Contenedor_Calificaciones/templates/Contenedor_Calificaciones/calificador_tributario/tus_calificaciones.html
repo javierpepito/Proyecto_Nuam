@@ -1,0 +1,224 @@
+{% extends 'Contenedor_Calificaciones/base_calificador.html' %}
+{% load static %}
+
+{% block title %}
+    Tus Calificaciones
+{% endblock %}
+
+{% block content %}
+
+<section class="seccion d-flex flex-column justify-content-start align-items-center p-4">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="fw-bold" style="color: #f5732c;">
+                    <i class="bi bi-send-check"></i> Calificaciones Enviadas para Aprobación
+                </h2>
+                <p class="text-muted">
+                    Aquí puedes ver todas las calificaciones que has enviado y están esperando aprobación del jefe de equipo.
+                    {% if total_calificaciones > 0 %}
+                        <span class="badge bg-warning text-dark">{{ total_calificaciones }} calificación{{ total_calificaciones|pluralize:"es" }}</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if calificaciones %}
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle">
+                    <thead style="background-color: #f5732c; color: white;">
+                        <tr class="text-center">
+                            <th scope="col">Acciones</th>
+                            <th scope="col">RUT</th>
+                            <th scope="col">Nombre de la Empresa</th>
+                            <th scope="col">Período del Año</th>
+                            <th scope="col">Tipo de Calificación</th>
+                            <th scope="col">Monto Tributario</th>
+                            <th scope="col">Factor Tributario</th>
+                            <th scope="col">Unidad de Valor</th>
+                            <th scope="col">Puntaje de Calificación</th>
+                            <th scope="col">Categoría</th>
+                            <th scope="col">Nivel de Riesgo</th>
+                            <th scope="col">Fecha de Envío</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for calificacion in calificaciones %}
+                        <tr>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="#" class="btn btn-sm btn-success" title="Ver detalles" data-bs-toggle="modal" data-bs-target="#modalDetalle{{ calificacion.calificacion_id }}">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-warning" title="Editar">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta calificación?')">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </a>
+                                </div>
+                            </td>
+                            <td>{{ calificacion.rut_empresa.empresa_rut }}</td>
+                            <td>{{ calificacion.rut_empresa.nombre_empresa }}</td>
+                            <td class="text-center">{{ calificacion.anio_tributario }}</td>
+                            <td>{{ calificacion.tipo_calificacion }}</td>
+                            <td class="text-end">${{ calificacion.monto_tributario|floatformat:2 }}</td>
+                            <td class="text-center">{{ calificacion.factor_tributario|floatformat:2 }}</td>
+                            <td class="text-center">{{ calificacion.unidad_valor }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-primary">{{ calificacion.puntaje_calificacion }} pts</span>
+                            </td>
+                            <td class="text-center">
+                                {% if calificacion.categoria_calificacion == 'alto' %}
+                                    <span class="badge bg-danger">Alto</span>
+                                {% elif calificacion.categoria_calificacion == 'medio' %}
+                                    <span class="badge bg-warning text-dark">Medio</span>
+                                {% else %}
+                                    <span class="badge bg-success">Bajo</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if calificacion.nivel_riesgo == 'critico' %}
+                                    <span class="badge bg-danger">Crítico</span>
+                                {% elif calificacion.nivel_riesgo == 'alto' %}
+                                    <span class="badge bg-warning text-dark">Alto</span>
+                                {% elif calificacion.nivel_riesgo == 'medio' %}
+                                    <span class="badge bg-info">Medio</span>
+                                {% else %}
+                                    <span class="badge bg-success">Bajo</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ calificacion.fecha_calculo|date:"d/m/Y H:i" }}</td>
+                        </tr>
+
+                        <!-- Modal para ver detalles -->
+                        <div class="modal fade" id="modalDetalle{{ calificacion.calificacion_id }}" tabindex="-1" aria-labelledby="modalDetalleLabel{{ calificacion.calificacion_id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header" style="background-color: #f5732c; color: white;">
+                                        <h5 class="modal-title" id="modalDetalleLabel{{ calificacion.calificacion_id }}">
+                                            <i class="bi bi-file-earmark-text"></i> Detalle de Calificación
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 class="fw-bold">Información de la Empresa</h6>
+                                                <p><strong>RUT:</strong> {{ calificacion.rut_empresa.empresa_rut }}</p>
+                                                <p><strong>Nombre:</strong> {{ calificacion.rut_empresa.nombre_empresa }}</p>
+                                                <p><strong>País:</strong> {{ calificacion.rut_empresa.pais }}</p>
+                                                <p><strong>Tipo:</strong> {{ calificacion.rut_empresa.tipo_de_empresa }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="fw-bold">Datos de la Calificación</h6>
+                                                <p><strong>ID:</strong> {{ calificacion.calificacion_id }}</p>
+                                                <p><strong>Año Tributario:</strong> {{ calificacion.anio_tributario }}</p>
+                                                <p><strong>Método:</strong> {{ calificacion.get_metodo_calificacion_display }}</p>
+                                                <p><strong>Fecha de Cálculo:</strong> {{ calificacion.fecha_calculo|date:"d/m/Y H:i:s" }}</p>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 class="fw-bold">Valores Tributarios</h6>
+                                                <p><strong>Tipo de Calificación:</strong> {{ calificacion.tipo_calificacion }}</p>
+                                                <p><strong>Monto Tributario:</strong> ${{ calificacion.monto_tributario|floatformat:2 }}</p>
+                                                <p><strong>Factor Tributario:</strong> {{ calificacion.factor_tributario|floatformat:2 }}</p>
+                                                <p><strong>Unidad de Valor:</strong> {{ calificacion.unidad_valor }}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="fw-bold">Evaluación</h6>
+                                                <p><strong>Puntaje:</strong> <span class="badge bg-primary">{{ calificacion.puntaje_calificacion }} pts</span></p>
+                                                <p><strong>Categoría:</strong> 
+                                                    {% if calificacion.categoria_calificacion == 'alto' %}
+                                                        <span class="badge bg-danger">Alto</span>
+                                                    {% elif calificacion.categoria_calificacion == 'medio' %}
+                                                        <span class="badge bg-warning text-dark">Medio</span>
+                                                    {% else %}
+                                                        <span class="badge bg-success">Bajo</span>
+                                                    {% endif %}
+                                                </p>
+                                                <p><strong>Nivel de Riesgo:</strong> 
+                                                    {% if calificacion.nivel_riesgo == 'critico' %}
+                                                        <span class="badge bg-danger">Crítico</span>
+                                                    {% elif calificacion.nivel_riesgo == 'alto' %}
+                                                        <span class="badge bg-warning text-dark">Alto</span>
+                                                    {% elif calificacion.nivel_riesgo == 'medio' %}
+                                                        <span class="badge bg-info">Medio</span>
+                                                    {% else %}
+                                                        <span class="badge bg-success">Bajo</span>
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {% if calificacion.justificacion_resultado %}
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <h6 class="fw-bold">Justificación/Observaciones</h6>
+                                                <p class="text-muted">{{ calificacion.justificacion_resultado }}</p>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación (si es necesario en el futuro) -->
+            <nav aria-label="Navegación de calificaciones">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">&lt;</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">4</a></li>
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    <li class="page-item"><a class="page-link" href="#">10</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">&gt;</a>
+                    </li>
+                </ul>
+            </nav>
+
+        {% else %}
+            <div class="alert alert-info text-center" role="alert">
+                <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+                <h4>No tienes calificaciones enviadas</h4>
+                <p>Aún no has enviado ninguna calificación para aprobación.</p>
+                <a href="{% url 'agregar_calificacion' %}" class="btn btn-primary mt-3">
+                    <i class="bi bi-plus-circle"></i> Crear Nueva Calificación
+                </a>
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{% url 'Inicio_Calificador' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver al Inicio
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

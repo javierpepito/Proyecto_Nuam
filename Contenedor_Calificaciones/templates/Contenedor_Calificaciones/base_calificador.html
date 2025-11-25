@@ -10,8 +10,8 @@
             <div>
 
                 {% if request.session.cuenta_id %}
-                    <a class="btn btn-outline-light mx-2" href="#">Tus Calificaciones</a>
-                    <a class="btn btn-outline-light mx-2" href="#">Calificaciones Pendientes</a>
+                    <a class="btn btn-outline-light mx-2" href="{% url 'tus_calificaciones' %}">Tus Calificaciones</a>
+                    <a class="btn btn-outline-light mx-2" href="{% url 'calificaciones_pendientes' %}">Calificaciones Pendientes</a>
                     <a class="btn btn-outline-light mx-2" href="{% url 'agregar_calificacion' %}">Añadir Calificación</a>
                     <a class="btn btn-outline-light mx-2" href="{% url 'carga_masiva' %}">Carga Masiva</a>
                     <a class="btn btn-outline-light mx-2" href="#">Calificaciones Mal Ingresadas</a>

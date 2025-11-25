@@ -266,7 +266,7 @@ def agregar_calificacion(request):
                 # Guardar en la base de datos
                 calificacion.save()
                 messages.success(request, mensaje)
-                return redirect('Inicio_Calificador')
+                return redirect('agregar_calificacion')
             except Exception as e:
                 messages.error(request, f'Error al guardar la calificación: {str(e)}')
         
@@ -494,6 +494,7 @@ def carga_masiva_view(request):
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/carga_masiva.html', context)
 
+#Vista para crear cuenta
 def registro_view(request):
     """Vista para registro de nueva cuenta"""
     if request.method == 'POST':
@@ -511,3 +512,56 @@ def registro_view(request):
         form = RegistroCuentaForm()
     
     return render(request, 'Contenedor_Calificaciones/registro.html', {'form': form})
+
+# Vista para mostrar las calificaciones del usuario en estado "por aprobar"
+def tus_calificaciones(request):
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
+        return redirect('identificacion')
+    
+    cuenta_id = request.session.get('cuenta_id')
+    try:
+        cuenta = Cuenta.objects.get(pk=cuenta_id)
+    except Cuenta.DoesNotExist:
+        messages.error(request, 'Sesión inválida. Por favor, inicie sesión nuevamente.')
+        return redirect('identificacion')
+    
+    # Obtener las calificaciones del usuario en estado 'por_aprobar'
+    calificaciones = CalificacionTributaria.objects.filter(
+        cuenta_id=cuenta,
+        estado_calificacion='por_aprobar'
+    ).select_related('rut_empresa').order_by('-fecha_calculo')
+    
+    context = {
+        'calificaciones': calificaciones,
+        'total_calificaciones': calificaciones.count(),
+    }
+    
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/tus_calificaciones.html', context)
+
+# Vista para mostrar las calificaciones del usuario en estado "pendiente"
+def calificaciones_pendientes(request):
+    """
+    Vista para mostrar las calificaciones del usuario en estado 'pendiente'
+    """
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
+        return redirect('identificacion')
+    
+    cuenta_id = request.session.get('cuenta_id')
+    try:
+        cuenta = Cuenta.objects.get(pk=cuenta_id)
+    except Cuenta.DoesNotExist:
+        messages.error(request, 'Sesión inválida. Por favor, inicie sesión nuevamente.')
+        return redirect('identificacion')
+    
+    # Obtener las calificaciones del usuario en estado 'pendiente'
+    calificaciones = CalificacionTributaria.objects.filter(
+        cuenta_id=cuenta,
+        estado_calificacion='pendiente'
+    ).select_related('rut_empresa').order_by('-fecha_calculo')
+    
+    context = {
+        'calificaciones': calificaciones,
+        'total_calificaciones': calificaciones.count(),
+    }
+    
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificaciones_pendientes.html', context)

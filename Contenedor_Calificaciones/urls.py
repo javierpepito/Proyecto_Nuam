@@ -12,4 +12,6 @@ urlpatterns = [
     path("inicio_jefe/", views.Inicio_Jefe, name="Inicio_Jefe"),
     path("agregar_calificacion/", views.agregar_calificacion, name="agregar_calificacion"),
     path("carga_masiva/", views.carga_masiva_view, name="carga_masiva"),
+    path("tus_calificaciones/", views.tus_calificaciones, name="tus_calificaciones"),
+    path("calificaciones_pendientes/", views.calificaciones_pendientes, name="calificaciones_pendientes"),
 ]

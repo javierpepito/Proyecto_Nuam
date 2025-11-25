@@ -1,0 +1,126 @@
+{% extends 'Contenedor_Calificaciones/base_calificador.html' %}
+{% load static %}
+
+{% block title %}
+    Calificaciones Pendientes
+{% endblock %}
+
+{% block content %}
+
+<section class="seccion d-flex flex-column justify-content-start align-items-center p-4">
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="fw-bold" style="color: #f5732c;">
+                    <i class="bi bi-hourglass-split"></i> Calificaciones en Estado Pendiente
+                </h2>
+                <p class="text-muted">
+                    Estas calificaciones están guardadas pero aún no han sido enviadas para aprobación.
+                    {% if total_calificaciones > 0 %}
+                        <span class="badge bg-secondary">{{ total_calificaciones }} calificación{{ total_calificaciones|pluralize:"es" }}</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if calificaciones %}
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered align-middle">
+                    <thead style="background-color: #f5732c; color: white;">
+                        <tr class="text-center">
+                            <th scope="col">Acciones</th>
+                            <th scope="col">RUT</th>
+                            <th scope="col">Nombre de la Empresa</th>
+                            <th scope="col">Período del Año</th>
+                            <th scope="col">Tipo de Calificación</th>
+                            <th scope="col">Monto Tributario</th>
+                            <th scope="col">Factor Tributario</th>
+                            <th scope="col">Unidad de Valor</th>
+                            <th scope="col">Puntaje de Calificación</th>
+                            <th scope="col">Categoría</th>
+                            <th scope="col">Nivel de Riesgo</th>
+                            <th scope="col">Fecha de Creación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for calificacion in calificaciones %}
+                        <tr style="background-color: #ffe6e6;">
+                            <td class="text-center">
+                                <div class="btn-group-vertical" role="group">
+                                    <a href="#" class="btn btn-sm btn-success mb-1" title="Enviar para aprobación">
+                                        <i class="bi bi-send"></i> Enviar
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-warning mb-1" title="Editar">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta calificación?')">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </a>
+                                </div>
+                            </td>
+                            <td>{{ calificacion.rut_empresa.empresa_rut }}</td>
+                            <td>{{ calificacion.rut_empresa.nombre_empresa }}</td>
+                            <td class="text-center">{{ calificacion.anio_tributario }}</td>
+                            <td>{{ calificacion.tipo_calificacion }}</td>
+                            <td class="text-end">${{ calificacion.monto_tributario|floatformat:2 }}</td>
+                            <td class="text-center">{{ calificacion.factor_tributario|floatformat:2 }}</td>
+                            <td class="text-center">{{ calificacion.unidad_valor }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-primary">{{ calificacion.puntaje_calificacion }} pts</span>
+                            </td>
+                            <td class="text-center">
+                                {% if calificacion.categoria_calificacion == 'alto' %}
+                                    <span class="badge bg-danger">Alto</span>
+                                {% elif calificacion.categoria_calificacion == 'medio' %}
+                                    <span class="badge bg-warning text-dark">Medio</span>
+                                {% else %}
+                                    <span class="badge bg-success">Bajo</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if calificacion.nivel_riesgo == 'critico' %}
+                                    <span class="badge bg-danger">Crítico</span>
+                                {% elif calificacion.nivel_riesgo == 'alto' %}
+                                    <span class="badge bg-warning text-dark">Alto</span>
+                                {% elif calificacion.nivel_riesgo == 'medio' %}
+                                    <span class="badge bg-info">Medio</span>
+                                {% else %}
+                                    <span class="badge bg-success">Bajo</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ calificacion.fecha_calculo|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <div class="alert alert-info text-center" role="alert">
+                <i class="bi bi-info-circle fs-1 d-block mb-3"></i>
+                <h4>No tienes calificaciones pendientes</h4>
+                <p>No hay calificaciones guardadas en estado pendiente.</p>
+                <a href="{% url 'agregar_calificacion' %}" class="btn btn-primary mt-3">
+                    <i class="bi bi-plus-circle"></i> Crear Nueva Calificación
+                </a>
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{% url 'Inicio_Calificador' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver al Inicio
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
