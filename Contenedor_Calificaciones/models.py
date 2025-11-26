@@ -494,3 +494,100 @@ class CalificacionTributaria(models.Model):
             self.fecha_calculo = timezone.now()
         
         super().save(*args, **kwargs)
+
+
+# Modelos dependientes para aprobación y rechazo de calificaciones
+class CalificacionAprovada(models.Model):
+	# Una aprobación por cada calificación tributaria
+	calificacion = models.ForeignKey(
+		'CalificacionTributaria',
+		on_delete=models.CASCADE,
+		related_name='aprobacion'
+	)
+
+	# Jefe de equipo que aprueba
+	jefe = models.ForeignKey(
+		'Cuenta',
+		on_delete=models.PROTECT,
+		related_name='aprobaciones_realizadas'
+	)
+
+	# RUT del aprobador (redundante a solicitud)
+	jefe_rut = models.CharField(max_length=13)
+
+	# Observaciones del motivo de aprobación
+	observaciones = models.TextField(blank=True)
+
+	# Fecha de aprobación
+	fecha_aprovacion = models.DateTimeField(default=timezone.now, editable=False)
+
+	class Meta:
+		db_table = 'calificacion_aprovada'
+		verbose_name = 'Calificación Aprovada'
+		verbose_name_plural = 'Calificaciones Aprovadas'
+		constraints = [
+			models.UniqueConstraint(fields=['calificacion'], name='uniq_aprovacion_por_calificacion')
+		]
+
+	def __str__(self) -> str:
+		return f"Aprobación calif {self.calificacion_id} por {self.jefe_rut}"
+
+	def clean(self):
+		# Solo Jefe de Equipo puede aprobar
+		if self.jefe and getattr(self.jefe, 'rol', None) != 'Jefe De Equipo':
+			raise ValidationError('Solo un Jefe de Equipo puede aprobar la calificación tributaria.')
+
+	def save(self, *args, **kwargs):
+		# Cachear rut del jefe
+		if self.jefe and hasattr(self.jefe, 'rut'):
+			self.jefe_rut = self.jefe.rut
+		self.full_clean()
+		super().save(*args, **kwargs)
+
+
+class CalificacionRechazada(models.Model):
+	# Un rechazo por cada calificación tributaria
+	calificacion = models.ForeignKey(
+		'CalificacionTributaria',
+		on_delete=models.CASCADE,
+		related_name='rechazo'
+	)
+
+	# Jefe de equipo que rechaza
+	jefe = models.ForeignKey(
+		'Cuenta',
+		on_delete=models.PROTECT,
+		related_name='rechazos_realizados'
+	)
+
+	# RUT del rechazador (redundante a solicitud)
+	jefe_rut = models.CharField(max_length=13)
+
+	# Observaciones del motivo de rechazo
+	observaciones = models.TextField(blank=True)
+
+	# Fecha de rechazo
+	fecha_rechazo = models.DateTimeField(default=timezone.now, editable=False)
+
+	class Meta:
+		db_table = 'calificacion_rechazada'
+		verbose_name = 'Calificación Rechazada'
+		verbose_name_plural = 'Calificaciones Rechazadas'
+		constraints = [
+			models.UniqueConstraint(fields=['calificacion'], name='uniq_rechazo_por_calificacion')
+		]
+
+	def __str__(self) -> str:
+		return f"Rechazo calif {self.calificacion_id} por {self.jefe_rut}"
+
+	def clean(self):
+		# Solo Jefe de Equipo puede rechazar
+		if self.jefe and getattr(self.jefe, 'rol', None) != 'Jefe De Equipo':
+			raise ValidationError('Solo un Jefe de Equipo puede rechazar la calificación tributaria.')
+
+	def save(self, *args, **kwargs):
+		# Cachear rut del jefe
+		if self.jefe and hasattr(self.jefe, 'rut'):
+			self.jefe_rut = self.jefe.rut
+		self.full_clean()
+		super().save(*args, **kwargs)

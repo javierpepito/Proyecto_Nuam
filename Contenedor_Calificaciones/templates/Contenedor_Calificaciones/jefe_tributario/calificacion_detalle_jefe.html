@@ -1,0 +1,150 @@
+{% extends 'Contenedor_Calificaciones/base_jefe.html' %}
+{% load static %}
+
+{% block title %}Detalle Calificación #{{ c.calificacion_id }}{% endblock %}
+
+{% block content %}
+<section class="seccion d-flex flex-column justify-content-start align-items-center p-4">
+  <div class="container-fluid">
+    <div class="row mb-4">
+      <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="fw-bold" style="color:#f5732c;">
+            <i class="bi bi-file-earmark-text"></i> Detalle Calificación #{{ c.calificacion_id }}
+          </h2>
+          <div class="text-muted">Estado: 
+            {% if c.estado_calificacion == 'pendiente' %}
+              <span class="badge bg-warning text-dark">Pendiente</span>
+            {% elif c.estado_calificacion == 'aprobado' %}
+              <span class="badge bg-success">Aprobado</span>
+            {% elif c.estado_calificacion == 'rechazado' %}
+              <span class="badge bg-danger">Rechazado</span>
+            {% else %}
+              <span class="badge bg-secondary">{{ c.estado_calificacion }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div>
+          {% if c.estado_calificacion == 'pendiente' %}
+            <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#aprobarModal">
+              <i class="bi bi-check2-circle"></i> Aprobar
+            </button>
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rechazarModal">
+              <i class="bi bi-x-circle"></i> Rechazar
+            </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Empresa</h5>
+        <div class="row">
+          <div class="col-md-4"><strong>RUT:</strong> {{ c.rut_empresa.empresa_rut }}</div>
+          <div class="col-md-8"><strong>Nombre:</strong> {{ c.nombre_empresa }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Calificador</h5>
+        <div class="row">
+          <div class="col-md-6">
+            <strong>Nombre:</strong> {% if c.cuenta_id %}{{ c.cuenta_id.nombre }} {{ c.cuenta_id.apellido }}{% else %}(desconocido){% endif %}
+          </div>
+          <div class="col-md-6">
+            <strong>Fecha de cálculo:</strong> {{ c.fecha_calculo|date:'Y-m-d H:i' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Datos de la Calificación</h5>
+        <div class="row g-2">
+          <div class="col-md-3"><strong>Año Tributario:</strong> {{ c.anio_tributario }}</div>
+          <div class="col-md-3"><strong>Tipo:</strong> {{ c.tipo_calificacion }}</div>
+          <div class="col-md-3"><strong>Monto:</strong> {{ c.monto_tributario }}</div>
+          <div class="col-md-3"><strong>Unidad:</strong> {{ c.unidad_valor }}</div>
+          <div class="col-md-3"><strong>Factor:</strong> {{ c.factor_tributario }}</div>
+          <div class="col-md-3"><strong>Puntaje:</strong> {{ c.puntaje_calificacion }}</div>
+          <div class="col-md-3"><strong>Categoría:</strong> {{ c.categoria_calificacion }}</div>
+          <div class="col-md-3"><strong>Riesgo:</strong> {{ c.nivel_riesgo }}</div>
+        </div>
+        <div class="mt-3">
+          <strong>Justificación:</strong>
+          <div class="border rounded p-2 bg-light">{{ c.justificacion_resultado|default:'(sin justificación)' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <a href="{% url 'calificaciones_pendientes_jefe' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver a pendientes</a>
+    </div>
+  </div>
+</section>
+
+{% if c.estado_calificacion == 'pendiente' %}
+<!-- Modal Aprobar -->
+<div class="modal fade" id="aprobarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Aprobar Calificación #{{ c.calificacion_id }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{% url 'aprobar_calificacion' c.calificacion_id %}">
+        <div class="modal-body">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Observaciones (opcional)</label>
+            <textarea class="form-control" name="observaciones" rows="4" placeholder="Escribe tus observaciones de aprobación..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Enviar Aprobación</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Rechazar -->
+<div class="modal fade" id="rechazarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Rechazar Calificación #{{ c.calificacion_id }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{% url 'rechazar_calificacion' c.calificacion_id %}">
+        <div class="modal-body">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Observaciones (recomendado)</label>
+            <textarea class="form-control" name="observaciones" rows="4" placeholder="Explica el motivo del rechazo..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger">Enviar Rechazo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

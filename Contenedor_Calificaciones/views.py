@@ -3,7 +3,7 @@ from django import forms
 from django.contrib import messages
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from .models import Empresa, Cuenta, CalificacionTributaria
+from .models import Empresa, Cuenta, CalificacionTributaria, CalificacionAprovada, CalificacionRechazada
 from .forms import CalificacionTributariaForm
 from .forms import RegistroCuentaForm
 from .validators import validate_rut_chileno, formatear_rut
@@ -13,6 +13,7 @@ import pandas as pd
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import os
+from django.db import IntegrityError
 
 #Variables constantes para los roles:
 ROL_JEFE = 'Jefe De Equipo'
@@ -565,3 +566,143 @@ def calificaciones_pendientes(request):
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificaciones_pendientes.html', context)
+
+
+# Vista para jefes: ver calificaciones pendientes de su equipo
+def calificaciones_pendientes_jefe(request):
+    if not request.session.get('cuenta_id') or request.session.get('rol') != ROL_JEFE:
+        return redirect('identificacion')
+
+    jefe = get_object_or_404(Cuenta, pk=request.session.get('cuenta_id'))
+    equipo = jefe.equipo_trabajo
+    if not equipo:
+        messages.info(request, 'No tienes un equipo asignado actualmente.')
+        return render(request, 'Contenedor_Calificaciones/jefe_tributario/calificaciones_pendientes_jefe.html', {
+            'calificaciones': [],
+            'total_calificaciones': 0,
+        })
+
+    # Cuentas de calificadores en el equipo del jefe
+    cuentas_calificadores = Cuenta.objects.filter(equipo_trabajo=equipo, rol=ROL_CALIFICADOR)
+
+    calificaciones = (
+        CalificacionTributaria.objects
+        .filter(cuenta_id__in=cuentas_calificadores, estado_calificacion='pendiente')
+        .select_related('cuenta_id', 'rut_empresa')
+        .order_by('-fecha_calculo')
+    )
+
+    context = {
+        'calificaciones': calificaciones,
+        'total_calificaciones': calificaciones.count(),
+    }
+    return render(request, 'Contenedor_Calificaciones/jefe_tributario/calificaciones_pendientes_jefe.html', context)
+
+
+# Acción: aprobar calificación (solo Jefe)
+def aprobar_calificacion(request, calificacion_id: int):
+    if request.method != 'POST':
+        return redirect('calificaciones_pendientes_jefe')
+    if not request.session.get('cuenta_id') or request.session.get('rol') != ROL_JEFE:
+        return redirect('identificacion')
+
+    jefe = get_object_or_404(Cuenta, pk=request.session.get('cuenta_id'))
+    calificacion = get_object_or_404(CalificacionTributaria, pk=calificacion_id)
+
+    # Validar pertenencia al equipo y estado pendiente
+    if jefe.equipo_trabajo is None or not Cuenta.objects.filter(
+        equipo_trabajo=jefe.equipo_trabajo, rol=ROL_CALIFICADOR, cuenta_id=calificacion.cuenta_id_id
+    ).exists():
+        messages.error(request, 'No puedes aprobar calificaciones fuera de tu equipo.')
+        return redirect('calificaciones_pendientes_jefe')
+    if calificacion.estado_calificacion != 'pendiente':
+        messages.error(request, 'La calificación ya no está en estado pendiente.')
+        return redirect('calificaciones_pendientes_jefe')
+
+    observaciones = request.POST.get('observaciones', '').strip()
+
+    try:
+        CalificacionAprovada.objects.create(
+            calificacion=calificacion,
+            jefe=jefe,
+            observaciones=observaciones,
+        )
+        calificacion.estado_calificacion = 'aprobado'
+        calificacion.save()
+        messages.success(request, f'Se aprobó la calificación #{calificacion.calificacion_id}.')
+    except IntegrityError:
+        messages.error(request, 'Ya existe un registro de aprobación para esta calificación.')
+    except ValidationError as e:
+        messages.error(request, f'Error de validación: {e}')
+
+    return redirect('calificaciones_pendientes_jefe')
+
+
+# Acción: rechazar calificación (solo Jefe)
+def rechazar_calificacion(request, calificacion_id: int):
+    if request.method != 'POST':
+        return redirect('calificaciones_pendientes_jefe')
+    if not request.session.get('cuenta_id') or request.session.get('rol') != ROL_JEFE:
+        return redirect('identificacion')
+
+    jefe = get_object_or_404(Cuenta, pk=request.session.get('cuenta_id'))
+    calificacion = get_object_or_404(CalificacionTributaria, pk=calificacion_id)
+
+    # Validar pertenencia al equipo y estado pendiente
+    if jefe.equipo_trabajo is None or not Cuenta.objects.filter(
+        equipo_trabajo=jefe.equipo_trabajo, rol=ROL_CALIFICADOR, cuenta_id=calificacion.cuenta_id_id
+    ).exists():
+        messages.error(request, 'No puedes rechazar calificaciones fuera de tu equipo.')
+        return redirect('calificaciones_pendientes_jefe')
+    if calificacion.estado_calificacion != 'pendiente':
+        messages.error(request, 'La calificación ya no está en estado pendiente.')
+        return redirect('calificaciones_pendientes_jefe')
+
+    observaciones = request.POST.get('observaciones', '').strip()
+
+    try:
+        CalificacionRechazada.objects.create(
+            calificacion=calificacion,
+            jefe=jefe,
+            observaciones=observaciones,
+        )
+        calificacion.estado_calificacion = 'rechazado'
+        calificacion.save()
+        messages.success(request, f'Se rechazó la calificación #{calificacion.calificacion_id}.')
+    except IntegrityError:
+        messages.error(request, 'Ya existe un registro de rechazo para esta calificación.')
+    except ValidationError as e:
+        messages.error(request, f'Error de validación: {e}')
+
+    return redirect('calificaciones_pendientes_jefe')
+
+
+# Detalle de una calificación para Jefe (previo a aprobar/rechazar)
+def detalle_calificacion_jefe(request, calificacion_id: int):
+    if not request.session.get('cuenta_id') or request.session.get('rol') != ROL_JEFE:
+        return redirect('identificacion')
+
+    jefe = get_object_or_404(Cuenta, pk=request.session.get('cuenta_id'))
+    calificacion = get_object_or_404(
+        CalificacionTributaria.objects.select_related('cuenta_id', 'rut_empresa'),
+        pk=calificacion_id
+    )
+
+    # Validar que la calificación pertenezca a un calificador del equipo del jefe
+    pertenece = Cuenta.objects.filter(
+        equipo_trabajo=jefe.equipo_trabajo,
+        rol=ROL_CALIFICADOR,
+        cuenta_id=calificacion.cuenta_id_id
+    ).exists()
+    if not pertenece:
+        messages.error(request, 'No puedes ver calificaciones fuera de tu equipo.')
+        return redirect('calificaciones_pendientes_jefe')
+
+    # Opcional: advertir si no está pendiente
+    if calificacion.estado_calificacion != 'pendiente':
+        messages.info(request, 'Esta calificación ya no está en estado pendiente.')
+
+    context = {
+        'c': calificacion,
+    }
+    return render(request, 'Contenedor_Calificaciones/jefe_tributario/calificacion_detalle_jefe.html', context)

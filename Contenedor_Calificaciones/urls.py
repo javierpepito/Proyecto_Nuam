@@ -14,4 +14,9 @@ urlpatterns = [
     path("carga_masiva/", views.carga_masiva_view, name="carga_masiva"),
     path("tus_calificaciones/", views.tus_calificaciones, name="tus_calificaciones"),
     path("calificaciones_pendientes/", views.calificaciones_pendientes, name="calificaciones_pendientes"),
+    # Rutas Jefe: calificaciones pendientes del equipo y acciones
+    path("jefe/calificaciones_pendientes/", views.calificaciones_pendientes_jefe, name="calificaciones_pendientes_jefe"),
+    path("jefe/calificaciones/<int:calificacion_id>/", views.detalle_calificacion_jefe, name="detalle_calificacion_jefe"),
+    path("jefe/calificaciones/aprobar/<int:calificacion_id>/", views.aprobar_calificacion, name="aprobar_calificacion"),
+    path("jefe/calificaciones/rechazar/<int:calificacion_id>/", views.rechazar_calificacion, name="rechazar_calificacion"),
 ]
