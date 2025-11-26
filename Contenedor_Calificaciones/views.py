@@ -22,9 +22,17 @@ ROL_CALIFICADOR = 'Calificador Tributario'
 #Vista inicial del calificador tributario
 def Inicio_Calificador(request):
     if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR: 
-        #Al redirigir a indetificarse no se le da a entender que es una vista unica para jefes, podrian ser dos if que redirigian a dos pantallas distintas y una de esas la pantalla de advertencia.
         return redirect('identificacion')
-    return render(request, 'Contenedor_Calificaciones/calificador_tributario/inicio_calificador.html')
+    
+    cuenta_id = request.session.get('cuenta_id')
+    calificaciones = CalificacionTributaria.objects.filter(
+        cuenta_id=cuenta_id,
+        estado_calificacion='pendiente'
+    ).order_by('-fecha_calculo')[:6]
+    context = {
+        'calificaciones': calificaciones,
+    }
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/inicio_calificador.html', context)
 
 #Vista inicial del jefe
 def Inicio_Jefe(request):
@@ -526,11 +534,14 @@ def tus_calificaciones(request):
         messages.error(request, 'Sesión inválida. Por favor, inicie sesión nuevamente.')
         return redirect('identificacion')
     
-    # Obtener las calificaciones del usuario en estado 'por_aprobar'
+    rut = request.GET.get('rut')
     calificaciones = CalificacionTributaria.objects.filter(
         cuenta_id=cuenta,
         estado_calificacion='por_aprobar'
     ).select_related('rut_empresa').order_by('-fecha_calculo')
+    
+    if rut:
+        calificaciones = calificaciones.filter(rut_empresa=rut)
     
     context = {
         'calificaciones': calificaciones,
@@ -555,6 +566,7 @@ def calificaciones_pendientes(request):
         return redirect('identificacion')
     
     # Obtener las calificaciones del usuario en estado 'pendiente'
+    rut = request.GET.get('rut')
     calificaciones = CalificacionTributaria.objects.filter(
         cuenta_id=cuenta,
         estado_calificacion='pendiente'
