@@ -13,8 +13,8 @@
             <i class="bi bi-file-earmark-text"></i> Detalle Calificación #{{ c.calificacion_id }}
           </h2>
           <div class="text-muted">Estado: 
-            {% if c.estado_calificacion == 'pendiente' %}
-              <span class="badge bg-warning text-dark">Pendiente</span>
+            {% if c.estado_calificacion == 'por_aprobar' %}
+              <span class="badge bg-primary">Por Aprobar</span>
             {% elif c.estado_calificacion == 'aprobado' %}
               <span class="badge bg-success">Aprobado</span>
             {% elif c.estado_calificacion == 'rechazado' %}
@@ -25,7 +25,7 @@
           </div>
         </div>
         <div>
-          {% if c.estado_calificacion == 'pendiente' %}
+          {% if c.estado_calificacion == 'por_aprobar' %}
             <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#aprobarModal">
               <i class="bi bi-check2-circle"></i> Aprobar
             </button>
@@ -91,12 +91,12 @@
     </div>
 
     <div>
-      <a href="{% url 'calificaciones_pendientes_jefe' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver a pendientes</a>
+      <a href="{% url 'calificaciones_pendientes_jefe' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver a por aprobar</a>
     </div>
   </div>
 </section>
 
-{% if c.estado_calificacion == 'pendiente' %}
+{% if c.estado_calificacion == 'por_aprobar' %}
 <!-- Modal Aprobar -->
 <div class="modal fade" id="aprobarModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
