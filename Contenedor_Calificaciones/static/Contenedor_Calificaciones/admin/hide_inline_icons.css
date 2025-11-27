@@ -1,0 +1,8 @@
+/* Oculta los iconos de lápiz, cruz, ojo y más en el inline del admin */
+.inline-related .inline-deletelink, /* X roja */
+.inline-related .inline-viewlink,   /* Ojo */
+.inline-related .inlinechangelink,  /* Lápiz */
+.inline-related .add-row,           /* + verde */
+.inline-related .inline-objects-tools {
+    display: none !important;
+}

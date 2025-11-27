@@ -89,51 +89,98 @@ class EquipoCalificadorInline(admin.TabularInline):
 	# Inline para editar la relación intermedia (equipo <-> calificador)
 	model = EquipoCalificador
 	extra = 0
+	verbose_name = "Miembro del equipo"
+	verbose_name_plural = "Miembros del equipo"
+	can_delete = False
+	show_change_link = False
+	# No mostrar botón de agregar
+	def has_add_permission(self, request, obj=None):
+		return True  # Si quieres ocultar el botón de agregar, pon False
+	def has_change_permission(self, request, obj=None):
+		return True
+	def has_delete_permission(self, request, obj=None):
+		return False
+	class Media:
+		css = {
+			'all': ('Contenedor_Calificaciones/admin/hide_inline_icons.css',)
+		}
 
+	# Mostrar nombre completo en vez de RUT en el selector
 	def formfield_for_foreignkey(self, db_field, request, **kwargs):
-		# Limita el listado de calificadores a los libres, pero conserva los ya asignados a este equipo al editar
 		if db_field.name == 'calificador':
-			object_id = request.resolver_match.kwargs.get('object_id')  # id del equipo en edición
+			object_id = request.resolver_match.kwargs.get('object_id')
 			if object_id:
-				# Excluir sólo los que están en otros equipos distintos a este
 				usados_en_otros = EquipoCalificador.objects.exclude(equipo_id=object_id).values_list('calificador__rut', flat=True)
-				kwargs['queryset'] = CalificadorTributario.objects.exclude(rut__in=usados_en_otros)
+				qs = CalificadorTributario.objects.exclude(rut__in=usados_en_otros)
 			else:
-				# Creación de nuevo equipo: excluir todos los usados
 				usados = EquipoCalificador.objects.values_list('calificador__rut', flat=True)
-				kwargs['queryset'] = CalificadorTributario.objects.exclude(rut__in=usados)
+				qs = CalificadorTributario.objects.exclude(rut__in=usados)
+			qs = qs.order_by('rut')
+			kwargs['queryset'] = qs
+			from django import forms
+			from .models import Cuenta
+			class NombreCalificadorChoiceField(forms.ModelChoiceField):
+				def label_from_instance(self, obj):
+					cuenta = Cuenta.objects.filter(rut=obj.rut).first()
+					if cuenta:
+						nombre = f"{cuenta.nombre} {cuenta.apellido}".strip()
+						return nombre if nombre else obj.rut
+					return obj.rut
+			kwargs['form_class'] = NombreCalificadorChoiceField
 		return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 
 @admin.register(EquipoDeTrabajo)
 class EquipoDeTrabajoAdmin(admin.ModelAdmin):
-	# Muestra el jefe del equipo y un contador de calificadores
-	list_display = ("equipo_id", "jefe_equipo_rut", "calificadores_count")
-	# Enlaces de edición (asegura que siempre se pueda entrar al formulario)
-	list_display_links = ("equipo_id",)
-	# Quitar edición en línea: sólo acceder al formulario al hacer click
-	search_fields = ("equipo_id", "jefe_equipo_rut__rut")
-	# Permite gestionar los calificadores desde el detalle del equipo
+	# Muestra el nombre del equipo (o ID si no tiene nombre), jefe y un contador de calificadores
+	list_display = ("nombre_o_id", "jefe_nombre", "miembros_equipo", "calificadores_count")
+	list_display_links = ("nombre_o_id",)
+	search_fields = ("equipo_id", "nombre_equipo", "jefe_equipo_rut__rut", "jefe_equipo_rut__nombre", "jefe_equipo_rut__apellido")
 	inlines = [EquipoCalificadorInline]
 
+	def nombre_o_id(self, obj):
+		return obj.nombre_equipo if obj.nombre_equipo else f"Equipo #{obj.equipo_id}"
+	nombre_o_id.short_description = "Equipo"
+
 	def formfield_for_foreignkey(self, db_field, request, **kwargs):
-		# Limita el listado de jefes a los libres, conservando el actual si se edita
 		if db_field.name == 'jefe_equipo_rut':
 			object_id = request.resolver_match.kwargs.get('object_id')
 			if object_id:
 				usados_en_otros = EquipoDeTrabajo.objects.exclude(pk=object_id).values_list('jefe_equipo_rut__rut', flat=True)
-				# Excluir los usados en otros equipos (ignorando nulls) pero dejar el actual
-				kwargs['queryset'] = JefeEquipo.objects.exclude(rut__in=[r for r in usados_en_otros if r])
+				qs = JefeEquipo.objects.exclude(rut__in=[r for r in usados_en_otros if r])
 			else:
 				usados = EquipoDeTrabajo.objects.values_list('jefe_equipo_rut__rut', flat=True)
-				kwargs['queryset'] = JefeEquipo.objects.exclude(rut__in=[r for r in usados if r])
+				qs = JefeEquipo.objects.exclude(rut__in=[r for r in usados if r])
+			kwargs['queryset'] = qs
+			from django import forms
+			from .models import Cuenta
+			class NombreJefeChoiceField(forms.ModelChoiceField):
+				def label_from_instance(self, obj):
+					cuenta = Cuenta.objects.filter(rut=obj.rut).first()
+					if cuenta:
+						nombre = f"{cuenta.nombre} {cuenta.apellido}".strip()
+						return nombre if nombre else obj.rut
+					return obj.rut
+			kwargs['form_class'] = NombreJefeChoiceField
 		return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-	def calificadores_count(self, obj):
-		"""Devuelve la cantidad de calificadores asociados al equipo."""
-		return obj.calificadores.count()
+	def jefe_nombre(self, obj):
+		jefe = obj.jefe_equipo_rut
+		if jefe:
+			return f"{getattr(jefe, 'nombre', '')} {getattr(jefe, 'apellido', '')} ({jefe.rut})"
+		return "-"
+	jefe_nombre.short_description = "Jefe de Equipo"
 
-	calificadores_count.short_description = "Calificadores"
+	def miembros_equipo(self, obj):
+		miembros = obj.calificadores.all()
+		nombres = [f"{getattr(m, 'nombre', '')} {getattr(m, 'apellido', '')} ({m.rut})" for m in miembros]
+		return ", ".join(nombres) if nombres else "-"
+	miembros_equipo.short_description = "Miembros del equipo"
+
+	def calificadores_count(self, obj):
+		return obj.calificadores.count()
+	calificadores_count.short_description = "# Calificadores"
 
 
 ## Modelo Rol eliminado: el rol ahora se deriva automáticamente por RUT en Cuenta

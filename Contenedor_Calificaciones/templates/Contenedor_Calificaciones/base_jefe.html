@@ -10,8 +10,10 @@
             <div>
 
                 {% if request.session.cuenta_id %}
-                    <a class="btn btn-outline-light mx-2" href="#">Ver Todas las Calificaciones</a>
+                    <a class="btn btn-outline-light mx-2" href="{% url 'tu_equipo' %}">Tu Equipo</a>
                     <a class="btn btn-outline-light mx-2" href="{% url 'calificaciones_pendientes_jefe' %}">Calificaciones Por Aprobar</a>
+                    <a class="btn btn-outline-light mx-2" href="{% url 'calificaciones_aprobadas_jefe' %}">Calificaciones Aprobadas</a>
+                    <a class="btn btn-outline-light mx-2" href="{% url 'calificaciones_rechazadas_jefe' %}">Calificaciones Rechazadas</a>
                     <a class="btn btn-outline-light mx-2" href="{% url 'logout' %}">Cerrar Sesión</a>
                 {% else %}
                     <a class="btn btn-outline-light mx-2" href="{% url 'identificacion' %}">Identificación</a>

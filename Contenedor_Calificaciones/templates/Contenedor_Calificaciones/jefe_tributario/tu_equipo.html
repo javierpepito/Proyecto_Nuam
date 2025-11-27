@@ -1,0 +1,64 @@
+{% extends 'Contenedor_Calificaciones/base_jefe.html' %}
+{% load static %}
+
+{% block title %}Tu Equipo - Jefe{% endblock %}
+
+{% block content %}
+<section class="seccion d-flex flex-column justify-content-start align-items-center p-4">
+  <div class="container-fluid">
+    <div class="row mb-4">
+      <div class="col-12">
+        <h2 class="fw-bold" style="color:#0dcaf0;">
+          <i class="bi bi-people-fill"></i> Tu Equipo de Trabajo
+        </h2>
+        <p class="text-muted">Listado de calificadores tributarios que pertenecen a tu equipo.</p>
+      </div>
+    </div>
+
+    {% if not equipo %}
+      <div class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle"></i> Actualmente no tienes un equipo asignado.
+      </div>
+    {% else %}
+      {% if calificadores %}
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">Nombre Completo</th>
+                <th scope="col">RUT</th>
+                <th scope="col">Correo</th>
+                <th scope="col">Cuenta</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cal in calificadores %}
+              <tr>
+                <td>{{ cal.nombre_completo|default:'-' }}</td>
+                <td>{{ cal.rut }}</td>
+                <td>{{ cal.correo|default:'-' }}</td>
+                <td class="text-center">
+                  {% if cal.tiene_cuenta %}
+                    <span class="text-success" title="Cuenta creada"><i class="bi bi-check-circle-fill"></i></span>
+                  {% else %}
+                    <span class="text-danger" title="Sin cuenta"><i class="bi bi-x-circle-fill"></i></span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="alert alert-warning" role="alert">
+          <i class="bi bi-exclamation-triangle"></i> Tu equipo no tiene calificadores registrados todavía.
+        </div>
+      {% endif %}
+    {% endif %}
+
+    <div class="mt-3">
+      <a href="{% url 'Inicio_Jefe' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver al inicio</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

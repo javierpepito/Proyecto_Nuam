@@ -3,7 +3,7 @@ from django import forms
 from django.contrib import messages
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from .models import Empresa, Cuenta, CalificacionTributaria, CalificacionAprovada, CalificacionRechazada
+from .models import Empresa, Cuenta, CalificacionTributaria, CalificacionAprovada, CalificacionRechazada, EquipoCalificador
 from .forms import CalificacionTributariaForm
 from .forms import RegistroCuentaForm
 from .validators import validate_rut_chileno, formatear_rut
@@ -595,20 +595,161 @@ def calificaciones_pendientes_jefe(request):
         })
 
     # Cuentas de calificadores en el equipo del jefe
-    cuentas_calificadores = Cuenta.objects.filter(equipo_trabajo=equipo, rol=ROL_CALIFICADOR)
+    cuentas_calificadores = Cuenta.objects.filter(equipo_trabajo=equipo, rol=ROL_CALIFICADOR).order_by('nombre', 'apellido')
 
-    calificaciones = (
-        CalificacionTributaria.objects
-        .filter(cuenta_id__in=cuentas_calificadores, estado_calificacion='por_aprobar')
-        .select_related('cuenta_id', 'rut_empresa')
-        .order_by('-fecha_calculo')
+    # Filtro por calificador (opcional)
+    calificador_id = request.GET.get('calificador_id')
+    try:
+        page_size = int(request.GET.get('page_size', 10))
+    except ValueError:
+        page_size = 10
+    if page_size not in [10,20,30,40,50]:
+        page_size = 10
+
+    base_qs = CalificacionTributaria.objects.filter(
+        cuenta_id__in=cuentas_calificadores,
+        estado_calificacion='por_aprobar'
     )
+    if calificador_id:
+        try:
+            base_qs = base_qs.filter(cuenta_id_id=int(calificador_id))
+        except ValueError:
+            pass
+
+    calificaciones_qs = base_qs.select_related('cuenta_id', 'rut_empresa').order_by('-fecha_calculo')
+
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(calificaciones_qs, page_size)
+    page = request.GET.get('page')
+    try:
+        calificaciones = paginator.page(page)
+    except PageNotAnInteger:
+        calificaciones = paginator.page(1)
+    except EmptyPage:
+        calificaciones = paginator.page(paginator.num_pages)
 
     context = {
         'calificaciones': calificaciones,
-        'total_calificaciones': calificaciones.count(),
+        'total_calificaciones': paginator.count,
+        'calificadores_equipo': cuentas_calificadores,
+        'calificador_seleccionado': calificador_id,
+        'page_size': page_size,
+        'page_obj': calificaciones,
+        'paginator': paginator,
     }
     return render(request, 'Contenedor_Calificaciones/jefe_tributario/calificaciones_pendientes_jefe.html', context)
+
+
+# Vista para jefes: ver calificaciones aprobadas de su equipo
+def calificaciones_aprobadas_jefe(request):
+    if not request.session.get('cuenta_id') or request.session.get('rol') != ROL_JEFE:
+        return redirect('identificacion')
+
+    jefe = get_object_or_404(Cuenta, pk=request.session.get('cuenta_id'))
+
+    # Buscar todas las calificaciones aprobadas por este jefe (sin importar equipo actual)
+    aprobadas_ids = CalificacionAprovada.objects.filter(jefe=jefe).values_list('calificacion_id', flat=True)
+    base_qs = CalificacionTributaria.objects.filter(
+        pk__in=aprobadas_ids,
+        estado_calificacion='aprobado'
+    )
+
+    # Calificadores únicos de esas calificaciones
+    calificadores_ids = base_qs.values_list('cuenta_id', flat=True).distinct()
+    calificadores_equipo = list(Cuenta.objects.filter(pk__in=calificadores_ids).order_by('nombre', 'apellido'))
+
+    calificador_id = request.GET.get('calificador_id')
+    try:
+        page_size = int(request.GET.get('page_size', 10))
+    except ValueError:
+        page_size = 10
+    if page_size not in [10,20,30,40,50]:
+        page_size = 10
+
+    if calificador_id:
+        try:
+            base_qs = base_qs.filter(cuenta_id_id=int(calificador_id))
+        except ValueError:
+            pass
+
+    calificaciones_qs = base_qs.select_related('cuenta_id', 'rut_empresa').order_by('-fecha_calculo')
+
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(calificaciones_qs, page_size)
+    page = request.GET.get('page')
+    try:
+        calificaciones = paginator.page(page)
+    except PageNotAnInteger:
+        calificaciones = paginator.page(1)
+    except EmptyPage:
+        calificaciones = paginator.page(paginator.num_pages)
+
+    context = {
+        'calificaciones': calificaciones,
+        'total_calificaciones': paginator.count,
+        'calificadores_equipo': calificadores_equipo,
+        'calificador_seleccionado': calificador_id,
+        'page_size': page_size,
+        'page_obj': calificaciones,
+        'paginator': paginator,
+    }
+    return render(request, 'Contenedor_Calificaciones/jefe_tributario/calificaciones_aprobadas.html', context)
+
+
+# Vista para jefes: ver calificaciones rechazadas de su equipo
+def calificaciones_rechazadas_jefe(request):
+    if not request.session.get('cuenta_id') or request.session.get('rol') != ROL_JEFE:
+        return redirect('identificacion')
+
+    jefe = get_object_or_404(Cuenta, pk=request.session.get('cuenta_id'))
+
+    # Buscar todas las calificaciones rechazadas por este jefe (sin importar equipo actual)
+    rechazadas_ids = CalificacionRechazada.objects.filter(jefe=jefe).values_list('calificacion_id', flat=True)
+    base_qs = CalificacionTributaria.objects.filter(
+        pk__in=rechazadas_ids,
+        estado_calificacion='rechazado'
+    )
+
+    # Calificadores únicos de esas calificaciones
+    calificadores_ids = base_qs.values_list('cuenta_id', flat=True).distinct()
+    calificadores_equipo = list(Cuenta.objects.filter(pk__in=calificadores_ids).order_by('nombre', 'apellido'))
+
+    calificador_id = request.GET.get('calificador_id')
+    try:
+        page_size = int(request.GET.get('page_size', 10))
+    except ValueError:
+        page_size = 10
+    if page_size not in [10,20,30,40,50]:
+        page_size = 10
+
+    if calificador_id:
+        try:
+            base_qs = base_qs.filter(cuenta_id_id=int(calificador_id))
+        except ValueError:
+            pass
+
+    calificaciones_qs = base_qs.select_related('cuenta_id', 'rut_empresa').order_by('-fecha_calculo')
+
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(calificaciones_qs, page_size)
+    page = request.GET.get('page')
+    try:
+        calificaciones = paginator.page(page)
+    except PageNotAnInteger:
+        calificaciones = paginator.page(1)
+    except EmptyPage:
+        calificaciones = paginator.page(paginator.num_pages)
+
+    context = {
+        'calificaciones': calificaciones,
+        'total_calificaciones': paginator.count,
+        'calificadores_equipo': calificadores_equipo,
+        'calificador_seleccionado': calificador_id,
+        'page_size': page_size,
+        'page_obj': calificaciones,
+        'paginator': paginator,
+    }
+    return render(request, 'Contenedor_Calificaciones/jefe_tributario/calificaciones_rechazadas.html', context)
 
 
 # Acción: aprobar calificación (solo Jefe)
@@ -714,7 +855,53 @@ def detalle_calificacion_jefe(request, calificacion_id: int):
     if calificacion.estado_calificacion != 'por_aprobar':
         messages.info(request, 'Esta calificación ya no está en estado por aprobar.')
 
+    return_url = request.META.get('HTTP_REFERER') or reverse('calificaciones_pendientes_jefe')
     context = {
         'c': calificacion,
+        'return_url': return_url,
     }
     return render(request, 'Contenedor_Calificaciones/jefe_tributario/calificacion_detalle_jefe.html', context)
+
+
+# Vista: mostrar equipo del jefe
+def tu_equipo(request):
+    """Muestra los calificadores que pertenecen al equipo del jefe autenticado.
+
+    Requiere que la sesión tenga cuenta_id y rol de Jefe. Si el jefe no tiene equipo
+    asignado se muestra un mensaje informativo. Para cada calificador se intenta
+    recuperar su Cuenta (si existe) para mostrar nombre, apellido y correo; si no
+    existe se dejan esos campos en blanco y se marca con X roja en la columna Cuenta.
+    """
+    if not request.session.get('cuenta_id') or request.session.get('rol') != ROL_JEFE:
+        return redirect('identificacion')
+
+    jefe_cuenta = get_object_or_404(Cuenta, pk=request.session.get('cuenta_id'))
+    equipo = jefe_cuenta.equipo_trabajo
+
+    calificadores_data = []
+    if equipo is not None:
+        # Relación intermedia EquipoCalificador -> calificador
+        relaciones = EquipoCalificador.objects.filter(equipo=equipo).select_related('calificador')
+        for rel in relaciones:
+            rut_calificador = rel.calificador.rut
+            cuenta_calificador = Cuenta.objects.filter(rut=rut_calificador).first()
+            if cuenta_calificador:
+                nombre_completo = f"{cuenta_calificador.nombre} {cuenta_calificador.apellido}".strip()
+                correo = cuenta_calificador.correo
+                tiene_cuenta = True
+            else:
+                nombre_completo = ''
+                correo = ''
+                tiene_cuenta = False
+            calificadores_data.append({
+                'rut': rut_calificador,
+                'nombre_completo': nombre_completo,
+                'correo': correo,
+                'tiene_cuenta': tiene_cuenta,
+            })
+
+    context = {
+        'equipo': equipo,
+        'calificadores': calificadores_data,
+    }
+    return render(request, 'Contenedor_Calificaciones/jefe_tributario/tu_equipo.html', context)

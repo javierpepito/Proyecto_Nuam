@@ -79,7 +79,47 @@ class JefeEquipo(models.Model):
 # Modelo de equipos de trabajo
 
 class EquipoDeTrabajo(models.Model):
+    equipo_id = models.AutoField(primary_key=True)
+    nombre_equipo = models.CharField(max_length=100, blank=True, null=True, unique=True, verbose_name="Nombre del equipo")
+    # Un equipo puede estar temporalmente sin jefe asignado
+    jefe_equipo_rut = models.OneToOneField(
+        JefeEquipo,
+        on_delete=models.PROTECT,
+        db_column='jefe_equipo_rut',
+        to_field='rut',
+        null=True,
+        blank=True,
+    )
+    # Hasta 5 calificadores por equipo mediante relación intermedia
+    calificadores = models.ManyToManyField(
+        CalificadorTributario,
+        through='EquipoCalificador',
+        related_name='equipos_de_trabajo',
+        help_text='Máximo 5 calificadores por equipo Mas El Jefe de equipo.',
+    )
+
+    class Meta:
+        # Nombre de la tabla en la base de datos Supabase
+        db_table = 'equipo_de_trabajo'
+        # Nombre para las interfaces humanas como admin, etc.
+        verbose_name = 'Equipo de trabajo'
+        # Nombre para la forma plural en los filtros de admin.
+        verbose_name_plural = 'Equipos de trabajo'
+
+    def __str__(self) -> str:
+        return self.nombre_equipo if self.nombre_equipo else f"Equipo #{self.equipo_id}"
+
+
+
+
+
+# Modelo intermedio para agregar a los calificadores y crear un equipo y luego enviar ese equipo al equipo de trabajo
+# Para que en caso de desea eliminar un calificador no se elimine el equipo completo y evitar furos errores, esto me lo recomendo chat gpt
+
+
+class EquipoDeTrabajo(models.Model):
 	equipo_id = models.AutoField(primary_key=True)
+	nombre_equipo = models.CharField(max_length=100, blank=True, null=True, unique=True, verbose_name="Nombre del equipo")
 	# Un equipo puede estar temporalmente sin jefe asignado
 	jefe_equipo_rut = models.OneToOneField(
 		JefeEquipo,
@@ -98,54 +138,28 @@ class EquipoDeTrabajo(models.Model):
 	)
 
 	class Meta:
-		# Nombre de la tabla en la base de datos Supabase
-		db_table = 'equipo_de_trabajo'
-		# Nombre para las interfaces humanas como admin, etc.
-		verbose_name = 'Equipo de trabajo'
-		# Nombre para la forma prural en los filtros de admin.
-		verbose_name_plural = 'Equipos de trabajo'
+		pass
 
 	def __str__(self) -> str:
-		return f"Equipo {self.equipo_id}"
-
-
-
-
-
-# Modelo intermedio para agregar a los calificadores y crear un equipo y luego enviar ese equipo al equipo de trabajo
-# Para que en caso de desea eliminar un calificador no se elimine el equipo completo y evitar furos errores, esto me lo recomendo chat gpt
-
-class EquipoCalificador(models.Model):
-	equipo = models.ForeignKey(EquipoDeTrabajo, on_delete=models.PROTECT, db_column='equipo_id', related_name='rel_calificadores')
-	# Un calificador solo puede estar en un equipo. Se garantiza con unique_together; se quita unique=True para evitar problemas de formulario.
-	calificador = models.ForeignKey(CalificadorTributario, on_delete=models.PROTECT, db_column='calificador_tributario_rut', to_field='rut', related_name='rel_equipos')
-
-	class Meta:
-		db_table = 'equipo_calificador'
-		unique_together = ('equipo', 'calificador')
-		verbose_name = 'Calificador en equipo'
-		verbose_name_plural = 'Calificadores en equipos'
-
-	def clean(self):
-		# No permitir más de 5 calificadores por equipo, esto se puede cambiar en caso de ser necesario
-		if self.equipo_id:
-			qs = EquipoCalificador.objects.filter(equipo=self.equipo)
-			if self.pk:
-				qs = qs.exclude(pk=self.pk)
-			if qs.count() >= 5:
-				raise ValidationError('Un equipo no puede tener más de 5 calificadores tributarios (máximo 6 integrantes incluyendo al jefe).')
-		# Evitar que el calificador pertenezca a otro equipo distinto
-		if self.calificador_id:
-			existe_otro = EquipoCalificador.objects.filter(calificador=self.calificador).exclude(pk=self.pk).exists()
-			if existe_otro:
-				raise ValidationError('Este calificador ya pertenece a otro equipo.')
-
-	def save(self, *args, **kwargs):
-		self.full_clean()
+		return self.nombre_equipo if self.nombre_equipo else f"Equipo #{self.equipo_id}"
 		super().save(*args, **kwargs)
 
 
 
+
+
+# Modelo intermedio para la relación muchos a muchos entre EquipoDeTrabajo y CalificadorTributario
+class EquipoCalificador(models.Model):
+	equipo = models.ForeignKey('EquipoDeTrabajo', on_delete=models.CASCADE)
+	calificador = models.ForeignKey('CalificadorTributario', on_delete=models.CASCADE)
+
+	class Meta:
+		unique_together = ('equipo', 'calificador')
+		verbose_name = 'Miembro de equipo'
+		verbose_name_plural = 'Miembros de equipo'
+
+	def __str__(self):
+		return f"{self.calificador} en {self.equipo}"
 
 # Modelo de cuentas de trabajadores (solo trabajadores ya registrados como JefeEquipo o CalificadorTributario)
 
