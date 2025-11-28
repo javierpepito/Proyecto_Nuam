@@ -27,7 +27,7 @@ def Inicio_Calificador(request):
     cuenta_id = request.session.get('cuenta_id')
     calificaciones = CalificacionTributaria.objects.filter(
         cuenta_id=cuenta_id,
-        estado_calificacion='pendiente'
+        estado_calificacion='por_enviar'
     ).order_by('-fecha_calculo')[:6]
     context = {
         'calificaciones': calificaciones,
@@ -38,7 +38,37 @@ def Inicio_Calificador(request):
 def Inicio_Jefe(request):
     if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_JEFE:
         return redirect('identificacion')
-    return render(request, 'Contenedor_Calificaciones/jefe_tributario/inicio_jefe.html')
+    
+    jefe = get_object_or_404(Cuenta, pk=request.session.get('cuenta_id'))
+    equipo = jefe.equipo_trabajo
+    
+    # Obtener calificadores del equipo del jefe
+    calificadores_equipo = []
+    if equipo:
+        calificadores_equipo = Cuenta.objects.filter(
+            equipo_trabajo=equipo,
+            rol=ROL_CALIFICADOR
+        ).order_by('nombre', 'apellido')
+    
+    # Obtener últimas 6 calificaciones por aprobar del equipo
+    calificaciones = []
+    if equipo:
+        cuentas_calificadores = Cuenta.objects.filter(
+            equipo_trabajo=equipo,
+            rol=ROL_CALIFICADOR
+        )
+        calificaciones = CalificacionTributaria.objects.filter(
+            cuenta_id__in=cuentas_calificadores,
+            estado_calificacion='por_aprobar'
+        ).select_related('cuenta_id', 'rut_empresa').order_by('-fecha_calculo')[:6]
+    
+    context = {
+        'calificaciones': calificaciones,
+        'calificadores_equipo': calificadores_equipo,
+        'nombre_equipo': equipo.nombre_equipo if equipo else 'Sin equipo asignado',
+    }
+    
+    return render(request, 'Contenedor_Calificaciones/jefe_tributario/inicio_jefe.html', context)
 
 def identificacion_view(request):
     """Primera etapa: solicita solo el RUT y redirige según corresponda."""
@@ -261,9 +291,9 @@ def agregar_calificacion(request):
             calificacion.metodo_calificacion = 'manual'
             
             # Determinar el estado según el botón presionado
-            if accion == 'pendiente':
-                calificacion.estado_calificacion = 'pendiente'
-                mensaje = 'Calificación guardada como Pendiente exitosamente.'
+            if accion == 'por_enviar':
+                calificacion.estado_calificacion = 'por_enviar'
+                mensaje = 'Calificación guardada como Por Enviar exitosamente.'
             elif accion == 'enviar':
                 calificacion.estado_calificacion = 'por_aprobar'
                 mensaje = 'Calificación enviada para aprobación exitosamente.'
@@ -535,25 +565,40 @@ def tus_calificaciones(request):
         return redirect('identificacion')
     
     rut = request.GET.get('rut')
-    calificaciones = CalificacionTributaria.objects.filter(
+    calificaciones_qs = CalificacionTributaria.objects.filter(
         cuenta_id=cuenta,
         estado_calificacion='por_aprobar'
     ).select_related('rut_empresa').order_by('-fecha_calculo')
     
     if rut:
-        calificaciones = calificaciones.filter(rut_empresa=rut)
+        calificaciones_qs = calificaciones_qs.filter(rut_empresa=rut)
+    
+    # Paginación
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(calificaciones_qs, 10)  # 10 calificaciones por página
+    page = request.GET.get('page')
+    
+    try:
+        calificaciones = paginator.page(page)
+    except PageNotAnInteger:
+        calificaciones = paginator.page(1)
+    except EmptyPage:
+        calificaciones = paginator.page(paginator.num_pages)
     
     context = {
         'calificaciones': calificaciones,
-        'total_calificaciones': calificaciones.count(),
+        'total_calificaciones': paginator.count,
+        'page_obj': calificaciones,
+        'paginator': paginator,
+        'rut': rut,
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/tus_calificaciones.html', context)
 
-# Vista para mostrar las calificaciones del usuario en estado "pendiente"
+# Vista para mostrar las calificaciones del usuario en estado "por_enviar"
 def calificaciones_pendientes(request):
     """
-    Vista para mostrar las calificaciones del usuario en estado 'pendiente'
+    Vista para mostrar las calificaciones del usuario en estado 'por_enviar'
     """
     if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
         return redirect('identificacion')
@@ -565,19 +610,106 @@ def calificaciones_pendientes(request):
         messages.error(request, 'Sesión inválida. Por favor, inicie sesión nuevamente.')
         return redirect('identificacion')
     
-    # Obtener las calificaciones del usuario en estado 'pendiente'
+    # Obtener las calificaciones del usuario en estado 'por_enviar'
     rut = request.GET.get('rut')
-    calificaciones = CalificacionTributaria.objects.filter(
+    calificaciones_qs = CalificacionTributaria.objects.filter(
         cuenta_id=cuenta,
-        estado_calificacion='pendiente'
+        estado_calificacion='por_enviar'
     ).select_related('rut_empresa').order_by('-fecha_calculo')
+    
+    if rut:
+        calificaciones_qs = calificaciones_qs.filter(rut_empresa=rut)
+    
+    # Paginación
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(calificaciones_qs, 10)  # 10 calificaciones por página
+    page = request.GET.get('page')
+    
+    try:
+        calificaciones = paginator.page(page)
+    except PageNotAnInteger:
+        calificaciones = paginator.page(1)
+    except EmptyPage:
+        calificaciones = paginator.page(paginator.num_pages)
     
     context = {
         'calificaciones': calificaciones,
-        'total_calificaciones': calificaciones.count(),
+        'total_calificaciones': paginator.count,
+        'page_obj': calificaciones,
+        'paginator': paginator,
+        'rut': rut,
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificaciones_pendientes.html', context)
+
+
+#Vista para editar una calificación por enviar
+def editar_calificacion_pendiente(request, calificacion_id):
+    """
+    Vista para editar una calificación en estado 'por_enviar'
+    """
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
+        return redirect('identificacion')
+    
+    cuenta_id = request.session.get('cuenta_id')
+    try:
+        cuenta = Cuenta.objects.get(pk=cuenta_id)
+    except Cuenta.DoesNotExist:
+        messages.error(request, 'Sesión inválida. Por favor, inicie sesión nuevamente.')
+        return redirect('identificacion')
+    
+    # Obtener la calificación y verificar que pertenezca al usuario y esté pendiente
+    calificacion = get_object_or_404(CalificacionTributaria, pk=calificacion_id)
+    
+    # Verificar que la calificación pertenece al usuario
+    if calificacion.cuenta_id != cuenta:
+        messages.error(request, 'No tienes permisos para editar esta calificación.')
+        return redirect('calificaciones_pendientes')
+    
+    # Verificar que la calificación esté en estado por enviar
+    if calificacion.estado_calificacion != 'por_enviar':
+        messages.error(request, 'Solo puedes editar calificaciones en estado Por Enviar.')
+        return redirect('calificaciones_pendientes')
+    
+    if request.method == 'POST':
+        form = CalificacionTributariaForm(request.POST, instance=calificacion)
+        
+        if form.is_valid():
+            try:
+                # Obtener RUT de empresa del formulario
+                rut_empresa = form.cleaned_data['rut_empresa']
+                empresa = Empresa.objects.get(empresa_rut=rut_empresa)
+                
+                # Guardar la calificación actualizada
+                calificacion_actualizada = form.save(commit=False)
+                calificacion_actualizada.rut_empresa = empresa
+                calificacion_actualizada.nombre_empresa = empresa.nombre_empresa
+                calificacion_actualizada.cuenta_id = cuenta
+                calificacion_actualizada.metodo_calificacion = 'manual'
+                calificacion_actualizada.estado_calificacion = 'por_enviar'
+                calificacion_actualizada.save()
+                
+                messages.success(request, f'Calificación #{calificacion_id} actualizada exitosamente.')
+                return redirect('calificaciones_pendientes')
+                
+            except Empresa.DoesNotExist:
+                messages.error(request, 'La empresa especificada no existe.')
+            except Exception as e:
+                messages.error(request, f'Error al actualizar la calificación: {str(e)}')
+    else:
+        # Prellenar el formulario con los datos existentes
+        initial_data = {
+            'rut_empresa': calificacion.rut_empresa.empresa_rut,
+        }
+        form = CalificacionTributariaForm(instance=calificacion, initial=initial_data)
+    
+    context = {
+        'form': form,
+        'calificacion': calificacion,
+        'editar': True,
+    }
+    
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/editar_calificacion.html', context)
 
 
 # Vista para jefes: ver calificaciones por aprobar de su equipo
@@ -599,6 +731,9 @@ def calificaciones_pendientes_jefe(request):
 
     # Filtro por calificador (opcional)
     calificador_id = request.GET.get('calificador_id')
+    # Filtro por RUT de empresa (opcional)
+    rut_empresa = request.GET.get('rut_empresa')
+    
     try:
         page_size = int(request.GET.get('page_size', 10))
     except ValueError:
@@ -615,6 +750,9 @@ def calificaciones_pendientes_jefe(request):
             base_qs = base_qs.filter(cuenta_id_id=int(calificador_id))
         except ValueError:
             pass
+    
+    if rut_empresa:
+        base_qs = base_qs.filter(rut_empresa__empresa_rut__icontains=rut_empresa)
 
     calificaciones_qs = base_qs.select_related('cuenta_id', 'rut_empresa').order_by('-fecha_calculo')
 
@@ -633,6 +771,7 @@ def calificaciones_pendientes_jefe(request):
         'total_calificaciones': paginator.count,
         'calificadores_equipo': cuentas_calificadores,
         'calificador_seleccionado': calificador_id,
+        'rut_empresa_filtro': rut_empresa,
         'page_size': page_size,
         'page_obj': calificaciones,
         'paginator': paginator,

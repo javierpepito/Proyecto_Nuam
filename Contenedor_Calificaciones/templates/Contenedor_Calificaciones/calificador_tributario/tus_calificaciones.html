@@ -48,6 +48,7 @@
                             <th scope="col">Puntaje de Calificación</th>
                             <th scope="col">Categoría</th>
                             <th scope="col">Nivel de Riesgo</th>
+                            <th scope="col">Estado</th>
                             <th scope="col">Fecha de Envío</th>
                         </tr>
                     </thead>
@@ -55,17 +56,9 @@
                         {% for calificacion in calificaciones %}
                         <tr>
                             <td class="text-center">
-                                <div class="btn-group" role="group">
-                                    <a href="#" class="btn btn-sm btn-success" title="Ver detalles" data-bs-toggle="modal" data-bs-target="#modalDetalle{{ calificacion.calificacion_id }}">
-                                        <i class="bi bi-eye"></i> Ver
-                                    </a>
-                                    <a href="#" class="btn btn-sm btn-warning" title="Editar">
-                                        <i class="bi bi-pencil"></i> Editar
-                                    </a>
-                                    <a href="#" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta calificación?')">
-                                        <i class="bi bi-trash"></i> Eliminar
-                                    </a>
-                                </div>
+                                <a href="#" class="btn btn-sm btn-success" title="Ver detalles" data-bs-toggle="modal" data-bs-target="#modalDetalle{{ calificacion.calificacion_id }}">
+                                    <i class="bi bi-eye"></i> Ver Detalles
+                                </a>
                             </td>
                             <td>{{ calificacion.rut_empresa.empresa_rut }}</td>
                             <td>{{ calificacion.rut_empresa.nombre_empresa }}</td>
@@ -95,6 +88,19 @@
                                     <span class="badge bg-info">Medio</span>
                                 {% else %}
                                     <span class="badge bg-success">Bajo</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if calificacion.estado_calificacion == 'por_aprobar' %}
+                                    <span class="badge bg-warning text-dark">Por Aprobar</span>
+                                {% elif calificacion.estado_calificacion == 'aprobado' %}
+                                    <span class="badge bg-success">Aprobado</span>
+                                {% elif calificacion.estado_calificacion == 'rechazado' %}
+                                    <span class="badge bg-danger">Rechazado</span>
+                                {% elif calificacion.estado_calificacion == 'por_enviar' %}
+                                    <span class="badge bg-secondary">Por Enviar</span>
+                                {% else %}
+                                    <span class="badge bg-dark">{{ calificacion.get_estado_calificacion_display }}</span>
                                 {% endif %}
                             </td>
                             <td class="text-center">{{ calificacion.fecha_calculo|date:"d/m/Y H:i" }}</td>
@@ -182,23 +188,24 @@
                 </table>
             </div>
 
-            <!-- Paginación (si es necesario en el futuro) -->
-            <nav aria-label="Navegación de calificaciones">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1">&lt;</a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item"><a class="page-link" href="#">4</a></li>
-                    <li class="page-item disabled">
-                        <span class="page-link">...</span>
-                    </li>
-                    <li class="page-item"><a class="page-link" href="#">10</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">&gt;</a>
-                    </li>
+            <!-- Paginación -->
+            <nav aria-label="Paginación">
+                <ul class="pagination justify-content-center mt-3">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if rut %}&rut={{ rut }}{% endif %}">Anterior</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if rut %}&rut={{ rut }}{% endif %}">Siguiente</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+                    {% endif %}
                 </ul>
             </nav>
 

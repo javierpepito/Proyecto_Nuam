@@ -336,7 +336,7 @@ class CalificacionTributaria(models.Model):
     ]
     
     ESTADO_CHOICES = [
-        ('pendiente', 'Pendiente'),
+        ('por_enviar', 'Por Enviar'),
         ('por_aprobar', 'Por Aprobar'),
         ('aprobado', 'Aprobado'),
         ('rechazado', 'Rechazado'),
@@ -379,7 +379,7 @@ class CalificacionTributaria(models.Model):
     estado_calificacion = models.CharField(
         max_length=20,
         choices=ESTADO_CHOICES,
-        default='pendiente',
+        default='por_enviar',
         verbose_name='Estado de la Calificación',
         editable=False  # Dato fantasma
     )

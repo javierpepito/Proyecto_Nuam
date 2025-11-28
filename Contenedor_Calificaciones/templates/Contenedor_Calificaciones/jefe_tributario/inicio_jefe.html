@@ -6,5 +6,187 @@
 {% endblock %}
 
 {% block content %}
-    <h3>Inicio del jefe</h3>
+<style>
+    body {
+        background: #fafafa;
+    }
+    .accesos-rapidos-title {
+        color: #ff7043;
+        font-size: 2.1rem;
+        font-weight: bold;
+        margin: 40px 0 20px 0;
+        text-align: left;
+        margin-left: 7vw;
+    }
+    .accesos-rapidos-botones {
+        display: flex;
+        gap: 3vw;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .acceso-btn {
+        background: #263342;
+        color: #fff;
+        border-radius: 22px;
+        padding: 32px 38px;
+        font-size: 1.18rem;
+        font-weight: 500;
+        min-width: 260px;
+        max-width: 340px;
+        text-align: center;
+        box-shadow: 0 2px 10px #0001;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .acceso-btn:hover {
+        background: #ff7043;
+        color: #fff;
+        transform: translateY(-4px) scale(1.03);
+        box-shadow: 0 6px 24px #ff704344;
+    }
+    .acceso-ver {
+        color: #ff7043;
+        font-weight: bold;
+        font-size: 1rem;
+        margin-top: 18px;
+        display: block;
+        text-decoration: underline;
+    }
+    .ultimas-title {
+        color: #ff7043;
+        font-size: 1.7rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        margin-top: 40px;
+        text-align: left;
+        margin-left: 7vw;
+    }
+    .ultimas-cards {
+        display: flex;
+        gap: 2vw;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 60px;
+    }
+    .calificacion-card {
+        background: #f6f6f6;
+        border-radius: 28px;
+        padding: 28px 30px 18px 30px;
+        min-width: 220px;
+        max-width: 260px;
+        box-shadow: 0 2px 10px #0001;
+        margin-bottom: 20px;
+        flex: 1 1 220px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .calificacion-id {
+        color: #ff7043;
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .calificacion-info {
+        color: #444;
+        font-size: 1rem;
+        margin-bottom: 2px;
+    }
+    .ver-detalle-link {
+        color: #ff7043;
+        font-weight: bold;
+        font-size: 1rem;
+        margin-top: 10px;
+        text-decoration: underline;
+        align-self: flex-end;
+    }
+</style>
+
+<div class="accesos-rapidos-title">Accesos Rápidos</div>
+<div class="accesos-rapidos-botones">
+    <a href="javascript:void(0);" onclick="abrirModalRutEmpresa()" class="acceso-btn">
+        Buscar Calificaciones por RUT de Empresa
+        <span class="acceso-ver"></span>
+    </a>
+    <a href="javascript:void(0);" onclick="abrirModalCalificador()" class="acceso-btn">
+        Buscar Calificación de un Calificador
+        <span class="acceso-ver"></span>
+    </a>
+</div>
+
+<div class="ultimas-title">Últimas Calificaciones Por Aprobar</div>
+<div class="ultimas-cards">
+    {% for cal in calificaciones %}
+    <div class="calificacion-card">
+        <div class="calificacion-id">ID: {{ cal.id }}</div>
+        <div class="calificacion-info">Calificador: {{ cal.cuenta_id.nombre }} {{ cal.cuenta_id.apellido }}</div>
+        <div class="calificacion-info">RUT: {{ cal.rut_empresa }}</div>
+        <div class="calificacion-info">Empresa: {{ cal.nombre_empresa }}</div>
+        <div class="calificacion-info">Año: {{ cal.anio_tributario }}</div>
+        <div class="calificacion-info">Puntaje: {{ cal.puntaje_calificacion }}</div>
+    </div>
+    {% empty %}
+    <div style="color:#666;font-size:1.1rem;margin:0 auto;">No hay calificaciones pendientes de aprobación.</div>
+    {% endfor %}
+</div>
+
+<!-- Modal para buscar por RUT de Empresa -->
+<div id="modal-rut-empresa" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.35); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:18px; padding:32px 28px; min-width:320px; box-shadow:0 2px 20px #0003; position:relative;">
+        <h3 style="color:#ff7043; margin-bottom:18px;">Buscar por RUT de Empresa</h3>
+        <form id="form-buscar-rut-empresa" method="get" action="{% url 'calificaciones_pendientes_jefe' %}">
+            <input type="text" name="rut_empresa" id="input-rut-empresa" placeholder="Ingrese RUT de la empresa" style="width:100%;padding:10px 12px;border:1.5px solid #ccc;border-radius:8px;margin-bottom:18px;" required>
+            <div style="display:flex;gap:12px;justify-content:flex-end;">
+                <button type="button" onclick="cerrarModalRutEmpresa()" style="background:#eee;color:#444;border:none;padding:8px 18px;border-radius:8px;">Cancelar</button>
+                <button type="submit" style="background:#ff7043;color:#fff;border:none;padding:8px 18px;border-radius:8px;">Buscar</button>
+            </div>
+        </form>
+        <button onclick="cerrarModalRutEmpresa()" style="position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.3rem;color:#ff7043;cursor:pointer;">&times;</button>
+    </div>
+</div>
+
+<!-- Modal para buscar por Calificador -->
+<div id="modal-calificador" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.35); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:18px; padding:32px 28px; min-width:380px; max-width:500px; box-shadow:0 2px 20px #0003; position:relative;">
+        <h3 style="color:#ff7043; margin-bottom:18px;">Buscar Calificaciones de un Calificador</h3>
+        <form id="form-buscar-calificador" method="get" action="{% url 'calificaciones_pendientes_jefe' %}">
+            <label for="select-calificador" style="display:block;margin-bottom:8px;color:#444;font-weight:500;">Seleccione un calificador:</label>
+            <select name="calificador_id" id="select-calificador" style="width:100%;padding:10px 12px;border:1.5px solid #ccc;border-radius:8px;margin-bottom:18px;" required>
+                <option value="">-- Seleccione --</option>
+                {% for calificador in calificadores_equipo %}
+                <option value="{{ calificador.cuenta_id }}">{{ calificador.nombre }} {{ calificador.apellido }} ({{ calificador.rut }})</option>
+                {% endfor %}
+            </select>
+            <div style="display:flex;gap:12px;justify-content:flex-end;">
+                <button type="button" onclick="cerrarModalCalificador()" style="background:#eee;color:#444;border:none;padding:8px 18px;border-radius:8px;">Cancelar</button>
+                <button type="submit" style="background:#ff7043;color:#fff;border:none;padding:8px 18px;border-radius:8px;">Buscar</button>
+            </div>
+        </form>
+        <button onclick="cerrarModalCalificador()" style="position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.3rem;color:#ff7043;cursor:pointer;">&times;</button>
+    </div>
+</div>
+
+<script>
+function abrirModalRutEmpresa() {
+    document.getElementById('modal-rut-empresa').style.display = 'flex';
+    setTimeout(() => { document.getElementById('input-rut-empresa').focus(); }, 100);
+}
+function cerrarModalRutEmpresa() {
+    document.getElementById('modal-rut-empresa').style.display = 'none';
+}
+
+function abrirModalCalificador() {
+    document.getElementById('modal-calificador').style.display = 'flex';
+    setTimeout(() => { document.getElementById('select-calificador').focus(); }, 100);
+}
+function cerrarModalCalificador() {
+    document.getElementById('modal-calificador').style.display = 'none';
+}
+</script>
 {% endblock %}

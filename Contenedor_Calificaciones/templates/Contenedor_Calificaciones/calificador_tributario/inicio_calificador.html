@@ -125,7 +125,7 @@
     </a>
 </div>
 
-<div class="ultimas-title">Ultimas Calificaciones Pendientes</div>
+<div class="ultimas-title">Últimas Calificaciones Por Enviar</div>
 <div class="ultimas-cards">
     {% for cal in calificaciones %}
     <div class="calificacion-card">
@@ -138,7 +138,7 @@
         <div class="calificacion-info">Puntaje: {{ cal.puntaje_calificacion }}</div>
     </div>
     {% empty %}
-    <div>No hay calificaciones pendientes.</div>
+    <div>No hay calificaciones por enviar.</div>
     {% endfor %}
 </div>
 
