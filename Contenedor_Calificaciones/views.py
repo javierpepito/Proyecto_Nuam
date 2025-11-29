@@ -8,6 +8,8 @@ from .forms import CalificacionTributariaForm
 from .forms import RegistroCuentaForm
 from .validators import validate_rut_chileno, formatear_rut
 from django.urls import reverse
+import json
+from django.db import transaction, connection
 
 import pandas as pd
 from django.core.files.storage import default_storage
@@ -341,7 +343,7 @@ def carga_masiva_view(request):
         
         # Validar extensión del archivo
         if not archivo.name.endswith(('.xlsx', '.xls')):
-            errores_globales.append('El archivo debe ser formato Excel (.xlsx o .xls)')
+            errores_globales.append('El archivo debe ser formato Excel (. xlsx o .xls)')
         else:
             try:
                 # Leer el archivo Excel
@@ -400,7 +402,7 @@ def carga_masiva_view(request):
                                 continue
                             
                             if filas_procesadas >= 10:
-                                errores_globales.append('⚠️ Se permiten máximo 10 calificaciones por archivo. Las filas adicionales fueron ignoradas.')
+                                errores_globales.append('⚠️ Se permiten máximo 10 calificaciones por archivo.  Las filas adicionales fueron ignoradas.')
                                 break
                             
                             filas_procesadas += 1
@@ -493,7 +495,7 @@ def carga_masiva_view(request):
                             }
                             riesgo_valor = str(row[col_riesgo]).strip()
                             if riesgo_valor not in riesgo_map:
-                                errores_fila.append(f'Nivel de riesgo inválido: {riesgo_valor}. Debe ser: Bajo, Medio, Alto o Crítico')
+                                errores_fila.append(f'Nivel de riesgo inválido: {riesgo_valor}.  Debe ser: Bajo, Medio, Alto o Crítico')
                                 riesgo = None
                             else:
                                 riesgo = riesgo_map[riesgo_valor]
@@ -522,6 +524,10 @@ def carga_masiva_view(request):
             except Exception as e:
                 errores_globales.append(f'Error al procesar el archivo: {str(e)}')
     
+    # Serializar datos válidos para pasarlos a la siguiente vista
+    datos_validos = [d for d in datos_procesados if d['valido']]
+    datos_json = json.dumps(datos_validos) if datos_validos else ''
+
     context = {
         'datos_procesados': datos_procesados,
         'errores_globales': errores_globales,
@@ -529,6 +535,7 @@ def carga_masiva_view(request):
         'total_registros': len(datos_procesados),
         'registros_validos': sum(1 for d in datos_procesados if d['valido']),
         'registros_con_errores': sum(1 for d in datos_procesados if not d['valido']),
+        'datos_json': datos_json,  # ← NUEVO
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/carga_masiva.html', context)
@@ -1044,3 +1051,104 @@ def tu_equipo(request):
         'calificadores': calificadores_data,
     }
     return render(request, 'Contenedor_Calificaciones/jefe_tributario/tu_equipo.html', context)
+
+#Guardar calificaciones masivas
+def guardar_calificaciones_masivas(request):
+    """
+    Vista para guardar las calificaciones válidas de la carga masiva en la BD.
+    """
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
+        return redirect('identificacion')
+    
+    if request. method == 'POST':
+        try:
+            # Obtener datos del formulario
+            datos_json = request.POST.get('datos_json', '')
+            accion = request. POST.get('accion', 'por_enviar')
+            
+            if not datos_json:
+                messages.error(request, 'No hay datos válidos para guardar.')
+                return redirect('carga_masiva')
+            
+            # Deserializar datos
+            datos_validos = json.loads(datos_json)
+            
+            if not datos_validos:
+                messages. warning(request, 'No hay calificaciones válidas para guardar.')
+                return redirect('carga_masiva')
+            
+            # Obtener cuenta del usuario
+            cuenta_id = request.session.get('cuenta_id')
+            cuenta = Cuenta.objects.get(pk=cuenta_id)
+            
+            # Determinar estado según la acción
+            if accion == 'por_enviar':
+                estado = 'por_enviar'
+                mensaje_exito = 'guardadas como Por Enviar'
+            elif accion == 'enviar':
+                estado = 'por_aprobar'
+                mensaje_exito = 'enviadas para aprobación'
+            else:
+                estado = 'por_enviar'
+                mensaje_exito = 'guardadas'
+            
+            # Guardar calificaciones usando SQL directo
+            from django.db import connection
+            guardadas = 0
+            
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    for dato in datos_validos:
+                        # Validar que la empresa existe
+                        empresa = Empresa.objects.filter(empresa_rut=dato['rut_empresa']).first()
+                        if not empresa:
+                            continue
+                        
+                        # Insertar directamente con SQL
+                        cursor.execute("""
+                            INSERT INTO calificacion_tributaria (
+                                cuenta_id, empresa_rut, nombre_empresa, anio_tributario,
+                                tipo_calificacion, monto_tributario, factor_tributario,
+                                unidad_valor, puntaje_calificacion, categoria_calificacion,
+                                nivel_riesgo, justificacion_resultado, metodo_calificacion,
+                                estado_calificacion, fecha_calculo
+                            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                        """, [
+                            cuenta. cuenta_id,
+                            dato['rut_empresa'],
+                            empresa.nombre_empresa,
+                            dato['anio_tributario'],
+                            dato['tipo_calificacion'],
+                            dato['monto_tributario'],
+                            dato['factor_tributario'],
+                            dato['unidad_valor'],
+                            dato['puntaje_calificacion'],
+                            dato['categoria_calificacion'],
+                            dato['nivel_riesgo'],
+                            dato. get('justificacion_resultado', ''),
+                            'masiva',
+                            estado
+                        ])
+                        guardadas += 1
+            
+            if guardadas > 0:
+                messages.success(
+                    request, 
+                    f'✅ {guardadas} calificación(es) {mensaje_exito} exitosamente.'
+                )
+            else:
+                messages.warning(request, 'No se guardó ninguna calificación.')
+            
+            return redirect('Inicio_Calificador')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Error al procesar los datos.  Intente nuevamente.')
+            return redirect('carga_masiva')
+        except Cuenta.DoesNotExist:
+            messages.error(request, 'Sesión inválida.')
+            return redirect('identificacion')
+        except Exception as e:
+            messages.error(request, f'Error al guardar: {str(e)}')
+            return redirect('carga_masiva')
+    
+    return redirect('carga_masiva')

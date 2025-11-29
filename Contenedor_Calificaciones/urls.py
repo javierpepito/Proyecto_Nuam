@@ -12,6 +12,7 @@ urlpatterns = [
     path("inicio_jefe/", views.Inicio_Jefe, name="Inicio_Jefe"),
     path("agregar_calificacion/", views.agregar_calificacion, name="agregar_calificacion"),
     path("carga_masiva/", views.carga_masiva_view, name="carga_masiva"),
+    path("guardar_calificaciones_masivas/", views.guardar_calificaciones_masivas, name="guardar_calificaciones_masivas"),
     path("tus_calificaciones/", views.tus_calificaciones, name="tus_calificaciones"),
     path("calificaciones_pendientes/", views.calificaciones_pendientes, name="calificaciones_pendientes"),
     path("calificaciones/editar/<int:calificacion_id>/", views.editar_calificacion_pendiente, name="editar_calificacion_pendiente"),

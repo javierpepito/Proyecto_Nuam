@@ -4,10 +4,12 @@
 {% block title %}Carga Masiva - Calificador Tributario{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4" style="height: 30vw;">
+<div class="container-fluid py-4 mb-5">
     <div class="row">
         <div class="col-12">
-            <h2 class="text-orange mb-4">Carga de calificaciones tributarias</h2>
+            <h2 class="text-orange mb-4">
+                <i class="bi bi-upload"></i> Carga de calificaciones tributarias
+            </h2>
             
             <!-- Formulario de carga -->
             <div class="card shadow-sm mb-4">
@@ -15,22 +17,27 @@
                     <form method="post" enctype="multipart/form-data" id="formCargaExcel">
                         {% csrf_token %}
                         <div class="row align-items-center">
-                            <div class="col-md-6">
+                            <div class="col-md-8">
                                 <div class="input-group">
                                     <input type="file" 
-                                           class="form-control" 
+                                           class="form-control form-control-lg" 
                                            id="archivo_excel" 
                                            name="archivo_excel" 
                                            accept=".xlsx,.xls"
                                            required>
-                                    <button class="btn btn-orange text-white" type="submit">
+                                    <button class="btn btn-orange btn-lg text-white px-4" type="submit">
                                         <i class="bi bi-upload"></i> Cargar Archivo
                                     </button>
                                 </div>
-                                <small class="text-muted">Formatos aceptados: .xlsx, .xls (Máximo 10 calificaciones)</small>
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> 
+                                    Formatos aceptados: .xlsx, .xls (Máximo 10 calificaciones)
+                                </small>
                             </div>
-                            <div class="col-md-6 text-end">
-                                <a href="#" class="btn btn-orange">
+                            <div class="col-md-4 text-end">
+                                <a href="{% static 'Contenedor_Calificaciones/plantillas/Plantilla_Nuam.xlsx' %}" 
+                                    class="btn btn-outline-orange btn-lg" 
+                                    download="Plantilla_Carga_Masiva_Nuam.xlsx">
                                     <i class="bi bi-download"></i> Descargar plantilla
                                 </a>
                             </div>
@@ -41,38 +48,51 @@
 
             <!-- Errores globales -->
             {% if errores_globales %}
-            <div class="alert alert-danger" role="alert">
-                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Advertencia</h5>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Advertencias del archivo
+                </h5>
                 <ul class="mb-0">
                     {% for error in errores_globales %}
                     <li>{{ error }}</li>
                     {% endfor %}
                 </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             {% endif %}
 
             <!-- Resumen de carga -->
             {% if archivo_nombre %}
-            <div class="card shadow-sm mb-4">
+            <div class="card shadow-sm mb-4 border-orange">
                 <div class="card-body">
-                    <h5 class="card-title">Archivo cargado: <span class="text-muted">{{ archivo_nombre }}</span></h5>
-                    <div class="row text-center mt-3">
-                        <div class="col-md-4">
-                            <div class="p-3 bg-light rounded">
-                                <h3 class="text-primary">{{ total_registros }}</h3>
-                                <p class="mb-0">Total de registros</p>
-                            </div>
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="mb-0">
+                                <i class="bi bi-file-earmark-excel text-success"></i> 
+                                <strong>Archivo cargado:</strong> 
+                                <span class="text-muted">{{ archivo_nombre }}</span>
+                            </h5>
                         </div>
-                        <div class="col-md-4">
-                            <div class="p-3 bg-light rounded">
-                                <h3 class="text-success">{{ registros_validos }}</h3>
-                                <p class="mb-0">Registros válidos</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="p-3 bg-light rounded">
-                                <h3 class="text-danger">{{ registros_con_errores }}</h3>
-                                <p class="mb-0">Con errores</p>
+                        <div class="col-md-6">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="stat-box bg-primary-light">
+                                        <h3 class="text-primary mb-0">{{ total_registros }}</h3>
+                                        <small class="text-muted">Total</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-box bg-success-light">
+                                        <h3 class="text-success mb-0">{{ registros_validos }}</h3>
+                                        <small class="text-muted">Válidos</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="stat-box bg-danger-light">
+                                        <h3 class="text-danger mb-0">{{ registros_con_errores }}</h3>
+                                        <small class="text-muted">Con errores</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -80,103 +100,198 @@
             </div>
             {% endif %}
 
-            <!-- Tabla de datos procesados -->
+            <!-- Tarjetas de datos procesados -->
             {% if datos_procesados %}
-            <div class="card shadow-sm">
-                <div class="card-header bg-orange text-white">
-                    <h5 class="mb-0">Resumen de la Carga</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-bordered mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="text-center" style="width: 60px;">Fila</th>
-                                    <th>RUT Empresa</th>
-                                    <th>Nombre Empresa</th>
-                                    <th class="text-center">Año</th>
-                                    <th>Tipo Calificación</th>
-                                    <th class="text-end">Monto</th>
-                                    <th class="text-end">Factor</th>
-                                    <th class="text-center">Unidad</th>
-                                    <th class="text-center">Puntaje</th>
-                                    <th class="text-center">Categoría</th>
-                                    <th class="text-center">Riesgo</th>
-                                    <th>Observaciones</th>
-                                    <th class="text-center">Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for dato in datos_procesados %}
-                                <tr class="{% if not dato.valido %}table-danger{% endif %}">
-                                    <td class="text-center">{{ dato.fila }}</td>
-                                    <td>{{ dato.rut_empresa }}</td>
-                                    <td>{{ dato.nombre_empresa }}</td>
-                                    <td class="text-center">{{ dato.anio_tributario|default:"-" }}</td>
-                                    <td>{{ dato.tipo_calificacion }}</td>
-                                    <td class="text-end">{{ dato.monto_tributario|floatformat:2|default:"-" }}</td>
-                                    <td class="text-end">{{ dato.factor_tributario|floatformat:2|default:"-" }}</td>
-                                    <td class="text-center">{{ dato.unidad_valor }}</td>
-                                    <td class="text-center">{{ dato.puntaje_calificacion|default:"-" }}</td>
-                                    <td class="text-center">
+            <div class="mb-4">
+                <h4 class="text-orange mb-3">
+                    <i class="bi bi-card-list"></i> Resumen de la Carga
+                </h4>
+                
+                <div class="cards-container">
+                    {% for dato in datos_procesados %}
+                    <div class="calificacion-card {% if dato.valido %}card-valid{% else %}card-invalid{% endif %}" 
+                         data-fila="{{ dato.fila }}">
+                        
+                        <!-- Header de la tarjeta -->
+                        <div class="card-header-custom">
+                            <div class="card-number">{{ forloop.counter }}. </div>
+                            <div class="card-status">
+                                {% if dato.valido %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Válido
+                                    </span>
+                                {% else %}
+                                    <button type="button" 
+                                            class="badge bg-danger border-0" 
+                                            data-bs-toggle="collapse" 
+                                            data-bs-target="#errores-{{ forloop.counter }}"
+                                            style="cursor: pointer;">
+                                        <i class="bi bi-exclamation-triangle"></i> Error ({{ dato.errores|length }})
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Errores (colapsable) -->
+                        {% if not dato.valido %}
+                        <div class="collapse error-section" id="errores-{{ forloop.counter }}">
+                            <div class="alert alert-danger mb-3">
+                                <strong><i class="bi bi-x-circle"></i> Errores encontrados:</strong>
+                                <ul class="mb-0 mt-2">
+                                    {% for error in dato.errores %}
+                                    <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Contenido de la tarjeta -->
+                        <div class="card-body-custom">
+                            <div class="row g-3">
+                                <!-- Fila 1: RUT y Nombre -->
+                                <div class="col-md-6">
+                                    <div class="field-group">
+                                        <label>RUT Empresa</label>
+                                        <div class="badge-orange">{{ dato.rut_empresa }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="field-group">
+                                        <label>Nombre Empresa</label>
+                                        <div class="badge-orange">{{ dato.nombre_empresa }}</div>
+                                    </div>
+                                </div>
+
+                                <!-- Fila 2: Año y Tipo -->
+                                <div class="col-md-6">
+                                    <div class="field-group">
+                                        <label>Año Tributario</label>
+                                        <div class="badge-orange">{{ dato.anio_tributario|default:"-" }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="field-group">
+                                        <label>Tipo de Calificación</label>
+                                        <div class="badge-orange">{{ dato.tipo_calificacion }}</div>
+                                    </div>
+                                </div>
+
+                                <!-- Fila 3: Monto, Factor, Unidad -->
+                                <div class="col-md-4">
+                                    <div class="field-group">
+                                        <label>Monto Tributario</label>
+                                        <div class="badge-orange">{{ dato.monto_tributario|floatformat:2|default:"-" }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="field-group">
+                                        <label>Factor Tributario</label>
+                                        <div class="badge-orange">{{ dato.factor_tributario|floatformat:2|default:"-" }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="field-group">
+                                        <label>Unidad de Valor</label>
+                                        <div class="badge-orange">{{ dato.unidad_valor }}</div>
+                                    </div>
+                                </div>
+
+                                <!-- Fila 4: Puntaje, Categoría, Riesgo -->
+                                <div class="col-md-4">
+                                    <div class="field-group">
+                                        <label>Puntaje</label>
+                                        <div class="badge-orange">{{ dato.puntaje_calificacion|default:"-" }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="field-group">
+                                        <label>Categoría</label>
                                         {% if dato.categoria_calificacion %}
-                                            <span class="badge bg-secondary">{{ dato.categoria_calificacion|upper }}</span>
+                                            <div class="badge-orange">{{ dato.categoria_calificacion|upper }}</div>
                                         {% else %}
-                                            -
+                                            <div class="badge-orange">-</div>
                                         {% endif %}
-                                    </td>
-                                    <td class="text-center">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="field-group">
+                                        <label>Nivel de Riesgo</label>
                                         {% if dato.nivel_riesgo %}
                                             {% if dato.nivel_riesgo == 'bajo' %}
-                                                <span class="badge bg-success">BAJO</span>
+                                                <div class="badge bg-success">BAJO</div>
                                             {% elif dato.nivel_riesgo == 'medio' %}
-                                                <span class="badge bg-warning text-dark">MEDIO</span>
+                                                <div class="badge bg-warning text-dark">MEDIO</div>
                                             {% elif dato.nivel_riesgo == 'alto' %}
-                                                <span class="badge bg-danger">ALTO</span>
+                                                <div class="badge bg-danger">ALTO</div>
                                             {% elif dato.nivel_riesgo == 'critico' %}
-                                                <span class="badge bg-dark">CRÍTICO</span>
+                                                <div class="badge bg-dark">CRÍTICO</div>
                                             {% endif %}
                                         {% else %}
-                                            -
+                                            <div class="badge-orange">-</div>
                                         {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if dato.justificacion_resultado|length > 50 %}
-                                            <small class="text-truncate d-inline-block" 
-                                                style="max-width: 200px; cursor: help;"
-                                                data-bs-toggle="tooltip" 
-                                                data-bs-placement="top"
-                                                title="{{ dato.justificacion_resultado }}">
-                                                {{ dato.justificacion_resultado }}
-                                            </small>
-                                        {% else %}
-                                            <small>{{ dato.justificacion_resultado }}</small>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-center">
-                                        {% if dato.valido %}
-                                            <span class="badge bg-success">
-                                                <i class="bi bi-check-circle"></i> Válido
-                                            </span>
-                                        {% else %}
-                                            <button type="button" 
-                                                    class="badge bg-danger border-0" 
-                                                    data-bs-toggle="popover" 
-                                                    data-bs-trigger="hover" 
-                                                    data-bs-placement="left"
-                                                    data-bs-html="true"
-                                                    data-bs-content="<ul class='text-start mb-0'>{% for error in dato.errores %}<li>{{ error }}</li>{% endfor %}</ul>">
-                                                <i class="bi bi-exclamation-triangle"></i> Error
-                                            </button>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Fila 5: Observaciones -->
+                                <div class="col-12">
+                                    <div class="field-group">
+                                        <label>Observaciones</label>
+                                        <div class="observaciones-box">
+                                            {{ dato.justificacion_resultado|default:"Sin observaciones" }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            {% if registros_validos > 0 %}
+            <div class="card shadow-sm border-orange mb-5">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <h5 class="text-muted">
+                            <i class="bi bi-question-circle"></i> 
+                            ¿Qué deseas hacer con las <strong>{{ registros_validos }}</strong> calificaciones válidas?
+                        </h5>
+                    </div>
+                    <div class="row justify-content-center g-3">
+                        <div class="col-md-4">
+                            <form method="post" action="{% url 'guardar_calificaciones_masivas' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="datos_json" value='{{ datos_json }}'>
+                                <input type="hidden" name="accion" value="por_enviar">
+                                <button type="submit" class="btn btn-warning btn-lg w-100">
+                                    <i class="bi bi-pause-circle"></i> Dejar en Pendiente
+                                </button>
+                                <small class="text-muted d-block mt-2 text-center">Podrás editarlas después</small>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <form method="post" action="{% url 'guardar_calificaciones_masivas' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="datos_json" value='{{ datos_json }}'>
+                                <input type="hidden" name="accion" value="enviar">
+                                <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <i class="bi bi-send-check"></i> Enviar Calificaciones
+                                </button>
+                                <small class="text-muted d-block mt-2 text-center">Irán al jefe para revisión</small>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'carga_masiva' %}" class="btn btn-danger btn-lg w-100">
+                                <i class="bi bi-x-circle"></i> Cancelar Calificaciones
+                            </a>
+                            <small class="text-muted d-block mt-2 text-center">Descartar todas las calificaciones</small>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endif %}
             {% endif %}
 
         </div>
@@ -184,11 +299,15 @@
 </div>
 
 <style>
+    /* ========== COLORES PRINCIPALES ========== */
     .text-orange {
         color: #ff6b35;
     }
     .bg-orange {
         background-color: #ff6b35;
+    }
+    .border-orange {
+        border: 2px solid #ff6b35;
     }
     .btn-orange {
         background-color: #ff6b35;
@@ -199,17 +318,172 @@
         background-color: #e55a2b;
         color: white;
     }
-    .navbar-dark {
+    .btn-outline-orange {
+        border: 2px solid #ff6b35 !important;
+        color: #ff6b35 !important;
+        background-color: transparent ! important;
+    }
+    .btn-outline-orange:hover {
+        background-color: #ff6b35 !important;
+        color: white !important;
+    }
+
+    /* ========== ESTADÍSTICAS ========== */
+    .stat-box {
+        padding: 15px;
+        border-radius: 10px;
+    }
+    .bg-primary-light {
+        background-color: #e3f2fd;
+    }
+    .bg-success-light {
+        background-color: #e8f5e9;
+    }
+    .bg-danger-light {
+        background-color: #ffebee;
+    }
+
+    /* ========== CONTENEDOR DE TARJETAS ========== */
+    .cards-container {
+        max-height: 600px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        background-color: #f8f9fa;
+    }
+
+    /* ========== TARJETA DE CALIFICACIÓN ========== */
+    .calificacion-card {
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .calificacion-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+
+    /* Tarjeta válida */
+    .card-valid {
+        border-left: 5px solid #28a745;
+    }
+
+    /* Tarjeta con errores */
+    .card-invalid {
+        border-left: 5px solid #dc3545;
+    }
+
+    /* ========== HEADER DE LA TARJETA ========== */
+    .card-header-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 2px solid #f1f1f1;
+    }
+    .card-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #ff6b35;
+    }
+    .card-status .badge {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+
+    /* ========== SECCIÓN DE ERRORES ========== */
+    .error-section {
+        padding: 0 20px;
+    }
+    .error-section .alert {
+        margin-top: 10px;
+    }
+
+    /* ========== BODY DE LA TARJETA ========== */
+    .card-body-custom {
+        padding: 20px;
+    }
+
+    /* ========== GRUPOS DE CAMPOS ========== */
+    .field-group {
+        margin-bottom: 10px;
+    }
+    .field-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+    }
+
+    /* ========== BADGES NARANJAS ========== */
+    .badge-orange {
         background-color: #ff6b35;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 500;
+        width: 100%;
+        text-align: center;
+    }
+
+    /* ========== CAJA DE OBSERVACIONES ========== */
+    .observaciones-box {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 14px;
+        color: #495057;
+        min-height: 60px;
+    }
+
+    /* ========== SCROLL PERSONALIZADO ========== */
+    .cards-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    .cards-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    .cards-container::-webkit-scrollbar-thumb {
+        background: #ff6b35;
+        border-radius: 10px;
+    }
+    .cards-container::-webkit-scrollbar-thumb:hover {
+        background: #e55a2b;
+    }
+
+    /* ========== FIX: ALTURA MÍNIMA PARA EMPUJAR FOOTER ========== */
+    .container-fluid.py-4 {
+        min-height: calc(100vh - 450px);
+        padding-bottom: 50px;
+    }
+
+    /* ========== RESPONSIVO ========== */
+    @media (max-width: 768px) {
+        .card-number {
+            font-size: 18px;
+        }
+        .badge-orange {
+            font-size: 12px;
+            padding: 6px 10px;
+        }
     }
 </style>
 
 <script>
-    // Activar popovers de Bootstrap
+    // Activar tooltips de Bootstrap si es necesario
     document.addEventListener('DOMContentLoaded', function() {
-        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-        var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-            return new bootstrap.Popover(popoverTriggerEl);
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     });
 </script>
