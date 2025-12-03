@@ -24,4 +24,6 @@ urlpatterns = [
     path("jefe/calificaciones/<int:calificacion_id>/", views.detalle_calificacion_jefe, name="detalle_calificacion_jefe"),
     path("jefe/calificaciones/aprobar/<int:calificacion_id>/", views.aprobar_calificacion, name="aprobar_calificacion"),
     path("jefe/calificaciones/rechazar/<int:calificacion_id>/", views.rechazar_calificacion, name="rechazar_calificacion"),
+    path("jefe/perfil/", views.perfil_jefe, name="perfil_jefe"),
+    path("calificador/perfil/", views.perfil_calificador, name="perfil_calificador"),
 ]

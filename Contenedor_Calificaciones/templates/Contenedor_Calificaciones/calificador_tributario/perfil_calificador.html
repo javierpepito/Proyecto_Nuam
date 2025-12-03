@@ -1,0 +1,43 @@
+{% extends 'Contenedor_Calificaciones/base_calificador.html' %}
+{% load static %}
+
+{% block title %}Perfil Calificador{% endblock %}
+
+{% block content %}
+<section class="d-flex flex-column justify-content-center align-items-center" style="min-height:70vh;">
+  <div class="card shadow-lg p-5" style="max-width:440px;width:100%;border-radius:30px;">
+    <div class="d-flex flex-column align-items-center mb-4">
+      <div style="width:120px;height:120px;border-radius:50%;background:#ffe3e3;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(255,112,67,0.15);">
+        <i class="bi bi-person-circle" style="font-size:5rem;color:#FF7043;"></i>
+      </div>
+    </div>
+    <form method="post" class="text-center">
+      {% csrf_token %}
+      <h4 class="fw-bold mb-2" style="color:#FF7043;">{{ user.nombre|default:'-' }} {{ user.apellido|default:'' }}</h4>
+      <p class="mb-1"><span class="fw-semibold">RUT:</span> {{ user.rut|default:'-' }}</p>
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="correo">Correo</label>
+        <input type="email" class="form-control text-center" id="correo" name="correo" value="{{ user.correo|default:'' }}" style="border-radius:18px;" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="edad">Edad</label>
+        <input type="number" class="form-control text-center" id="edad" name="edad" value="{{ user.edad|default:'' }}" style="border-radius:18px;" min="0" max="120">
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="telefono">Teléfono</label>
+        <input type="text" class="form-control text-center" id="telefono" name="telefono" value="{{ user.telefono|default:'' }}" style="border-radius:18px;">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Equipo de trabajo</label>
+        <div class="form-control text-center" style="border-radius:18px;background:#f8f9fa;">
+          {% if equipo %}
+            {{ equipo.nombre_equipo|default:equipo.equipo_id }}
+          {% else %}
+            -
+          {% endif %}
+        </div>
+        </div>
+      <button type="submit" class="btn w-100 mt-2" style="background:#FF7043;color:white;border:none;border-radius:18px;">Guardar Cambios</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

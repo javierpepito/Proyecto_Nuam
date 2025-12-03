@@ -1,3 +1,79 @@
+# Vista de perfil para calificador tributario
+def perfil_calificador(request):
+    if not request.session.get('cuenta_id') or request.session.get('rol') != 'Calificador Tributario':
+        return redirect('identificacion')
+    from .models import Cuenta
+    cuenta = Cuenta.objects.filter(pk=request.session.get('cuenta_id')).first()
+    mensaje = None
+    if request.method == 'POST' and cuenta:
+        correo = request.POST.get('correo', '').strip()
+        edad = request.POST.get('edad', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+        cambios = False
+        if correo and correo != cuenta.correo:
+            cuenta.correo = correo
+            cambios = True
+        if edad != '' and (str(cuenta.edad) != edad):
+            try:
+                edad_int = int(edad)
+                if edad_int >= 0 and edad_int <= 120:
+                    cuenta.edad = edad_int
+                    cambios = True
+                else:
+                    mensaje = "La edad debe estar entre 0 y 120."
+            except ValueError:
+                mensaje = "La edad debe ser un número válido."
+        if telefono != cuenta.telefono:
+            cuenta.telefono = telefono
+            cambios = True
+        if cambios and not mensaje:
+            cuenta.save()
+            mensaje = "Datos actualizados correctamente."
+    equipo = cuenta.equipo_trabajo if cuenta else None
+    context = {
+        'user': cuenta,
+        'equipo': equipo,
+        'mensaje': mensaje,
+    }
+    return render(request, 'Contenedor_Calificaciones/calificador_tributario/perfil_calificador.html', context)
+# Vista de perfil para jefe de equipo
+def perfil_jefe(request):
+    if not request.session.get('cuenta_id') or request.session.get('rol') != 'Jefe De Equipo':
+        return redirect('identificacion')
+    from .models import Cuenta
+    cuenta = Cuenta.objects.filter(pk=request.session.get('cuenta_id')).first()
+    equipo = cuenta.equipo_trabajo if cuenta else None
+    mensaje = None
+    if request.method == 'POST' and cuenta:
+        correo = request.POST.get('correo', '').strip()
+        edad = request.POST.get('edad', '').strip()
+        telefono = request.POST.get('telefono', '').strip()
+        cambios = False
+        if correo and correo != cuenta.correo:
+            cuenta.correo = correo
+            cambios = True
+        if edad != '' and (str(cuenta.edad) != edad):
+            try:
+                edad_int = int(edad)
+                if edad_int >= 0 and edad_int <= 120:
+                    cuenta.edad = edad_int
+                    cambios = True
+                else:
+                    mensaje = "La edad debe estar entre 0 y 120."
+            except ValueError:
+                mensaje = "La edad debe ser un número válido."
+        if telefono != cuenta.telefono:
+            cuenta.telefono = telefono
+            cambios = True
+        if cambios and not mensaje:
+            cuenta.save()
+            mensaje = "Datos actualizados correctamente."
+    context = {
+        'user': cuenta,
+        'equipo': equipo,
+        'mensaje': mensaje,
+    }
+    return render(request, 'Contenedor_Calificaciones/jefe_tributario/perfil_jefe.html', context)
 from django.shortcuts import render, redirect, get_object_or_404
 from django import forms
 from django.contrib import messages
