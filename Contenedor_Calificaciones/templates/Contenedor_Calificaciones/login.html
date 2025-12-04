@@ -168,7 +168,7 @@
             {% else %}
                 <h1 class="welcome-title">
                     ¡Bienvenido<br>
-                    {% if nombre %}&lt;{{ nombre }}{% if apellido %} {{ apellido }}{% endif %}&gt;{% else %}&lt;nombre_usuario&gt;{% endif %}!
+                    {% if nombre %}{{ nombre }}{% if apellido %} {{ apellido }}{% endif %}{% else %}nombre_usuario{% endif %}!
                 </h1>
                 
                 <div class="rut-display">
