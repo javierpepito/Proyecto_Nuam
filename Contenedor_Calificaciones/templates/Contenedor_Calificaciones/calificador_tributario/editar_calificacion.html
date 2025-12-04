@@ -233,7 +233,7 @@
             
             <!-- RUT de la Empresa -->
             <div class="form-row-custom">
-                <div class="form-group form-group-full">
+                <div class="form-group">
                     <label class="form-label" for="{{ form.rut_empresa.id_for_label }}">
                         {{ form.rut_empresa.label }}
                     </label>
@@ -243,6 +243,19 @@
                     {% endif %}
                     {% if form.rut_empresa.errors %}
                         <small class="text-danger">{{ form.rut_empresa.errors.0 }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.nombre_empresa.id_for_label }}">
+                        {{ form.nombre_empresa.label }}
+                    </label>
+                    {{ form.nombre_empresa }}
+                    {% if form.nombre_empresa.help_text %}
+                        <small class="form-text">{{ form.nombre_empresa.help_text }}</small>
+                    {% endif %}
+                    {% if form.nombre_empresa.errors %}
+                        <small class="text-danger">{{ form.nombre_empresa.errors.0 }}</small>
                     {% endif %}
                 </div>
             </div>
