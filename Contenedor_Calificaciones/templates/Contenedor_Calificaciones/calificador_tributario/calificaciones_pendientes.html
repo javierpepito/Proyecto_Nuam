@@ -56,13 +56,13 @@
                         <tr style="background-color: #ffe6e6;">
                             <td class="text-center">
                                 <div class="btn-group-vertical" role="group">
-                                    <a href="#" class="btn btn-sm btn-success mb-1" title="Enviar para aprobación">
+                                    <a href="{% url 'enviar_calificacion_pendiente' calificacion.calificacion_id %}" class="btn btn-sm btn-success mb-1" title="Enviar para aprobación" onclick="return confirm('¿Estás seguro de enviar esta calificación para aprobación?')">
                                         <i class="bi bi-send"></i> Enviar
                                     </a>
                                     <a href="{% url 'editar_calificacion_pendiente' calificacion.calificacion_id %}" class="btn btn-sm btn-warning mb-1" title="Editar">
                                         <i class="bi bi-pencil"></i> Editar
                                     </a>
-                                    <a href="#" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta calificación?')">
+                                    <a href="{% url 'eliminar_calificacion_pendiente' calificacion.calificacion_id %}" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta calificación?')">
                                         <i class="bi bi-trash"></i> Eliminar
                                     </a>
                                 </div>

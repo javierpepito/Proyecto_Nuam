@@ -347,10 +347,11 @@ def agregar_calificacion(request):
         form = CalificacionTributariaForm(request.POST)
         
         if form.is_valid():
-            # Obtener el RUT validado y formateado del formulario
+            # Obtener el RUT y nombre validados del formulario
             rut_empresa = form.cleaned_data['rut_empresa']
+            nombre_empresa = form.cleaned_data['nombre_empresa']
             
-            # Buscar la empresa (ya validamos que existe en clean_rut_empresa)
+            # Buscar la empresa (ya validamos que existe y coincide en clean())
             try:
                 empresa = Empresa.objects.get(empresa_rut=rut_empresa)
             except Empresa.DoesNotExist:
@@ -362,8 +363,9 @@ def agregar_calificacion(request):
             # Crear el objeto sin guardar aún
             calificacion = form.save(commit=False)
             
-            # CRÍTICO: Asignar la FK ANTES de cualquier validación o guardado
+            # CRÍTICO: Asignar la FK y el nombre ANTES de cualquier validación o guardado
             calificacion.rut_empresa = empresa
+            # Usar el nombre de la empresa tal como está en la BD (capitalizado correctamente)
             calificacion.nombre_empresa = empresa.nombre_empresa 
             calificacion.cuenta_id = cuenta
             calificacion.metodo_calificacion = 'manual'
@@ -535,6 +537,8 @@ def carga_masiva_view(request):
                                 factor = float(row[col_factor])
                                 if factor < 0:
                                     errores_fila.append('Factor tributario no puede ser negativo')
+                                elif factor > 1:
+                                    errores_fila.append('Factor tributario debe ser un valor entre 0 y 1 (Ej: 0.5 para 50%)')
                             except (ValueError, TypeError):
                                 errores_fila.append(f'Factor tributario inválido: {row[col_factor]}')
                                 factor = None
@@ -783,6 +787,7 @@ def editar_calificacion_pendiente(request, calificacion_id):
         # Prellenar el formulario con los datos existentes
         initial_data = {
             'rut_empresa': calificacion.rut_empresa.empresa_rut,
+            'nombre_empresa': calificacion.nombre_empresa,
         }
         form = CalificacionTributariaForm(instance=calificacion, initial=initial_data)
     
@@ -793,6 +798,88 @@ def editar_calificacion_pendiente(request, calificacion_id):
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/editar_calificacion.html', context)
+
+
+#Vista para eliminar una calificación pendiente (soft delete)
+def eliminar_calificacion_pendiente(request, calificacion_id):
+    """
+    Vista para realizar soft delete de una calificación en estado 'por_enviar'.
+    Cambia el estado a 'eliminado' sin borrar el registro de la BD.
+    """
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
+        return redirect('identificacion')
+    
+    cuenta_id = request.session.get('cuenta_id')
+    try:
+        cuenta = Cuenta.objects.get(pk=cuenta_id)
+    except Cuenta.DoesNotExist:
+        messages.error(request, 'Sesión inválida. Por favor, inicie sesión nuevamente.')
+        return redirect('identificacion')
+    
+    # Obtener la calificación
+    calificacion = get_object_or_404(CalificacionTributaria, pk=calificacion_id)
+    
+    # Verificar que la calificación pertenece al usuario
+    if calificacion.cuenta_id != cuenta:
+        messages.error(request, 'No tienes permisos para eliminar esta calificación.')
+        return redirect('calificaciones_pendientes')
+    
+    # Verificar que la calificación esté en estado por enviar
+    if calificacion.estado_calificacion != 'por_enviar':
+        messages.error(request, 'Solo puedes eliminar calificaciones en estado Por Enviar.')
+        return redirect('calificaciones_pendientes')
+    
+    # Guardar información para el mensaje
+    nombre_empresa = calificacion.nombre_empresa
+    
+    try:
+        # Soft delete: cambiar estado a 'eliminado' en lugar de borrar
+        calificacion.estado_calificacion = 'eliminado'
+        calificacion.save()
+        messages.success(request, f'Calificación de {nombre_empresa} eliminada exitosamente.')
+    except Exception as e:
+        messages.error(request, f'Error al eliminar la calificación: {str(e)}')
+    
+    return redirect('calificaciones_pendientes')
+
+
+#Vista para enviar una calificación pendiente para aprobación
+def enviar_calificacion_pendiente(request, calificacion_id):
+    """
+    Vista para cambiar el estado de una calificación de 'por_enviar' a 'por_aprobar'
+    """
+    if not request.session.get('cuenta_id') or not request.session.get('rol') == ROL_CALIFICADOR:
+        return redirect('identificacion')
+    
+    cuenta_id = request.session.get('cuenta_id')
+    try:
+        cuenta = Cuenta.objects.get(pk=cuenta_id)
+    except Cuenta.DoesNotExist:
+        messages.error(request, 'Sesión inválida. Por favor, inicie sesión nuevamente.')
+        return redirect('identificacion')
+    
+    # Obtener la calificación
+    calificacion = get_object_or_404(CalificacionTributaria, pk=calificacion_id)
+    
+    # Verificar que la calificación pertenece al usuario
+    if calificacion.cuenta_id != cuenta:
+        messages.error(request, 'No tienes permisos para enviar esta calificación.')
+        return redirect('calificaciones_pendientes')
+    
+    # Verificar que la calificación esté en estado por enviar
+    if calificacion.estado_calificacion != 'por_enviar':
+        messages.error(request, 'Solo puedes enviar calificaciones en estado Por Enviar.')
+        return redirect('calificaciones_pendientes')
+    
+    try:
+        # Cambiar el estado a 'por_aprobar'
+        calificacion.estado_calificacion = 'por_aprobar'
+        calificacion.save()
+        messages.success(request, f'Calificación de {calificacion.nombre_empresa} enviada para aprobación exitosamente.')
+    except Exception as e:
+        messages.error(request, f'Error al enviar la calificación: {str(e)}')
+    
+    return redirect('calificaciones_pendientes')
 
 
 # Vista para jefes: ver calificaciones por aprobar de su equipo

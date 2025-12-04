@@ -426,8 +426,12 @@ class CalificacionTributaria(models.Model):
     )
     
     factor_tributario = models.FloatField(
-        validators=[MinValueValidator(0)],
-        verbose_name='Factor Tributario'
+        validators=[
+            MinValueValidator(0, message='El factor tributario no puede ser negativo.'),
+            MaxValueValidator(1, message='El factor tributario debe ser un valor entre 0 y 1.')
+        ],
+        verbose_name='Factor Tributario',
+        help_text='Valor entre 0 y 1 (Ej: 0.5 = 50%)'
     )
     
     unidad_valor = models.CharField(
@@ -476,8 +480,6 @@ class CalificacionTributaria(models.Model):
             models.Index(fields=['-fecha_calculo'], name='idx_calificacion_fecha'),
             models.Index(fields=['cuenta_id'], name='idx_calificacion_cuenta'),
         ]
-        # Evitar duplicados: una empresa solo puede tener una calificación por año y tipo
-        unique_together = [['anio_tributario', 'tipo_calificacion']]
     
     def __str__(self):
         return f"{self.nombre_empresa} - {self.anio_tributario} ({self.puntaje_calificacion}pts)"

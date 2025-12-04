@@ -23,6 +23,18 @@ class CalificacionTributariaForm(forms.ModelForm):
         help_text='Debes ingresar el RUT sin puntos y con guión al final.'
     )
     
+    # Campo de texto para Nombre de la Empresa
+    nombre_empresa = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'id': 'nombre_empresa',
+            'placeholder': 'Ej: Empresa S.A.'
+        }),
+        label='Nombre de la Empresa',
+        help_text='Debe coincidir exactamente con el nombre registrado para el RUT ingresado.'
+    )
+    
     class Meta:
         model = CalificacionTributaria
         fields = [
@@ -62,7 +74,8 @@ class CalificacionTributariaForm(forms.ModelForm):
                 'id': 'factor_tributario',
                 'step': '0.01',
                 'min': '0',
-                'placeholder': 'Ej: 1.5'
+                'max': '1',
+                'placeholder': 'Ej: 0.5 (50%)'
             }),
             'unidad_valor': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -106,6 +119,7 @@ class CalificacionTributariaForm(forms.ModelForm):
         
         help_texts = {
             'anio_tributario': 'Año del periodo tributario a calificar',
+            'factor_tributario': 'Valor entre 0 y 1 (Ej: 0.5 = 50%, 0.75 = 75%)',
             'puntaje_calificacion': 'Puntaje de 0 a 100',
             'justificacion_resultado': 'Opcional. Detalles adicionales sobre la calificación',
         }
@@ -113,6 +127,16 @@ class CalificacionTributariaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['justificacion_resultado'].required = False
+    
+    def clean_factor_tributario(self):
+        """Validar que el factor tributario esté entre 0 y 1"""
+        factor = self.cleaned_data.get('factor_tributario')
+        if factor is not None:
+            if factor < 0:
+                raise forms.ValidationError('El factor tributario no puede ser negativo.')
+            if factor > 1:
+                raise forms.ValidationError('El factor tributario debe ser un valor entre 0 y 1 (Ej: 0.5 para 50%).')
+        return factor
     
     def clean_rut_empresa(self):
         """Validar formato del RUT y que la empresa exista"""
@@ -134,6 +158,33 @@ class CalificacionTributariaForm(forms.ModelForm):
             )
         
         return rut_formateado
+    
+    def clean(self):
+        """Validar que el nombre de la empresa coincida con el RUT registrado"""
+        cleaned_data = super().clean()
+        rut_empresa = cleaned_data.get('rut_empresa')
+        nombre_empresa = cleaned_data.get('nombre_empresa', '').strip()
+        
+        if rut_empresa and nombre_empresa:
+            try:
+                # Buscar la empresa por RUT
+                empresa = Empresa.objects.get(empresa_rut=rut_empresa)
+                
+                # Normalizar ambos nombres para comparación (sin distinción de mayúsculas/minúsculas)
+                nombre_bd = empresa.nombre_empresa.strip().lower()
+                nombre_ingresado = nombre_empresa.lower()
+                
+                # Verificar que coincidan exactamente
+                if nombre_bd != nombre_ingresado:
+                    raise forms.ValidationError({
+                        'nombre_empresa': f'El nombre ingresado no coincide con el registrado para el RUT {rut_empresa}. '
+                                        f'Nombre registrado: "{empresa.nombre_empresa}"'
+                    })
+            except Empresa.DoesNotExist:
+                # Este error ya se maneja en clean_rut_empresa
+                pass
+        
+        return cleaned_data
 
 class EmpresaForm(forms.ModelForm):
     """

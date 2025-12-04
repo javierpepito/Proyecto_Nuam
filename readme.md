@@ -6,8 +6,6 @@
 - Cesar Silva
 - Javier Mendez
 
-
-
 ## Requerimientos Funcionales
 
 -Que el sistema posea un mantenedor de calificaciones tributarias. Es importante para el proyecto porque esto permitirá mantener y mostrar el CRUD de las calificaciones.
@@ -38,7 +36,6 @@
 -El sistema debe tener un control de acceso para que solo puedan entrar los corredores registrados.	Nos ayuda a tener un mayor control de la seguridad ya que solo las personas autorizadas tendrán acceso al sistema.
 
 -Quiero que los datos se almacenen en una BD y que se puedan consultar en todo momento.	Es muy importante ya que aseguramos que la información quede guardada y que se pueda revisar en cualquier instante.
-
 
 
 ## Requerimientos No Funcionales
@@ -131,9 +128,6 @@ python manage.py runserver
 ```bash
 python manage.py createsuperuser
 ```
-
-admin
-admin
 
 ### Colores Usados
 * #f5732c
