@@ -160,3 +160,15 @@ python manage.py createsuperuser
 ## Credenciales para uso en desarrollo
 - 21.086.922-0 Ragnar7m7., (Jefe)
 - 22.025.650-2 Ragnar7m7., (Calificador)
+
+## Elevator Pitch
+1. ¿Qué problema resuelve la aplicación?
+	R// El sitio web busca responder a la necesidad del holding bursatil Nuam de cambiar su forma de manejar las calificaciones tributarias por medio de documentos en fisico a la digitalizacion, ademas de cumplir con la exigencia de un contenedor que permita gestionar las calificaciones tributarias.
+
+2. ¿Cuál es la propuesta de valor?
+	R// Nuestra propuesta es el siguiente sitio web que separa los roles de Jefe tributario y calificador tributario, permitiendo crear, actualizar, borrar y leer segun el respectivo rol, ademas de almacenar las calificacioes tributarias en una base de datos en la nube, gracias a la pagina web logramos unificar (escuchar el video de nuevo),(ademas de la app)
+
+3. ¿Qué integraciones la hacen única?
+	R// Integramos supabase, app en android o flutter, django, python, restframework
+
+Duracion maxima 2 minutos, breve y persuacivo
