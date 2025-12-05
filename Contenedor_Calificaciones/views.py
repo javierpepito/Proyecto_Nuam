@@ -1,3 +1,26 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django import forms
+from django.contrib import messages
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+from .models import Empresa, Cuenta, CalificacionTributaria, CalificacionAprovada, CalificacionRechazada, EquipoCalificador
+from .forms import CalificacionTributariaForm
+from .forms import RegistroCuentaForm
+from .validators import validate_rut_chileno, formatear_rut
+from django.urls import reverse
+import json
+from django.db import transaction, connection
+
+import pandas as pd
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import os
+from django.db import IntegrityError
+
+#Variables constantes para los roles:
+ROL_JEFE = 'Jefe De Equipo'
+ROL_CALIFICADOR = 'Calificador Tributario'
+
 # Vista de perfil para calificador tributario
 def perfil_calificador(request):
     if not request.session.get('cuenta_id') or request.session.get('rol') != 'Calificador Tributario':
@@ -74,28 +97,6 @@ def perfil_jefe(request):
         'mensaje': mensaje,
     }
     return render(request, 'Contenedor_Calificaciones/jefe_tributario/perfil_jefe.html', context)
-from django.shortcuts import render, redirect, get_object_or_404
-from django import forms
-from django.contrib import messages
-from django.utils import timezone
-from django.core.exceptions import ValidationError
-from .models import Empresa, Cuenta, CalificacionTributaria, CalificacionAprovada, CalificacionRechazada, EquipoCalificador
-from .forms import CalificacionTributariaForm
-from .forms import RegistroCuentaForm
-from .validators import validate_rut_chileno, formatear_rut
-from django.urls import reverse
-import json
-from django.db import transaction, connection
-
-import pandas as pd
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
-import os
-from django.db import IntegrityError
-
-#Variables constantes para los roles:
-ROL_JEFE = 'Jefe De Equipo'
-ROL_CALIFICADOR = 'Calificador Tributario'
 
 #Vista inicial del calificador tributario
 def Inicio_Calificador(request):
