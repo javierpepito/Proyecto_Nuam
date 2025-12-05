@@ -160,7 +160,8 @@ python manage.py createsuperuser
 ## Credenciales para uso en desarrollo
 - 21.086.922-0 Ragnar7m7., (Jefe)
 - 22.025.650-2 Ragnar7m7., (Calificador)
-
+- 21.256.946-1 Clitian.,1521 (Calificador)
+- 23.959.259-7 Chetar1614.. (Calificador)
 ## Elevator Pitch
 1. ¿Qué problema resuelve la aplicación?
 	R// El sitio web busca responder a la necesidad del holding bursatil Nuam de cambiar su forma de manejar las calificaciones tributarias por medio de documentos en fisico a la digitalizacion, ademas de cumplir con la exigencia de un contenedor que permita gestionar las calificaciones tributarias.
