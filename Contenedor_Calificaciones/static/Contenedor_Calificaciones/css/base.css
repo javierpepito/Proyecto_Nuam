@@ -240,3 +240,63 @@
 }
 .btn-hamburger-b:focus{ outline:none; box-shadow: 0 0 0 6px rgba(255,255,255,0.08); }
 @media (max-width:500px){ .btn-hamburger-b{ width:48px; height:48px; } .btn-hamburger-b .bi{ font-size:1.35rem; } }
+
+/* Botón acceso rápido: estilo llamativo y consistente */
+.acceso-btn {
+  background: linear-gradient(135deg, #ff7043 0%, #e34f2a 100%);
+  color: #fff;
+  border-radius: 26px;
+  padding: 28px 34px;
+  font-size: 1.18rem;
+  font-weight: 700;
+  min-width: 280px;
+  max-width: 360px;
+  text-align: center;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px solid rgba(255,255,255,0.18);
+  box-shadow: 0 10px 26px rgba(227,79,42,0.28);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.acceso-btn:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 20px 38px rgba(227,79,42,0.34);
+  filter: brightness(1.02);
+}
+
+.acceso-btn i {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.acceso-ver {
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.98rem;
+  text-decoration: underline;
+  opacity: 0.9;
+}
+
+/* Variante oscura para el segundo botón (contraste) */
+.acceso-btn.alt {
+  background: #263342;
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 10px 26px rgba(38,51,66,0.28);
+}
+
+.acceso-btn.alt:hover {
+  box-shadow: 0 20px 38px rgba(38,51,66,0.34);
+  filter: brightness(1.04);
+}
+
+.accesos-rapidos-botones {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  justify-content: center;
+}

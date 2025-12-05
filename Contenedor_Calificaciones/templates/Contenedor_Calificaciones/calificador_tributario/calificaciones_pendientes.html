@@ -33,45 +33,57 @@
         {% endif %}
 
         {% if calificaciones %}
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle">
-                    <thead style="background-color: #f5732c; color: white;">
-                        <tr class="text-center">
-                            <th scope="col">Acciones</th>
+            <div class="table-responsive shadow-sm">
+                <table class="table table-hover align-middle mb-0 modern-table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="text-center">Acciones</th>
                             <th scope="col">RUT</th>
-                            <th scope="col">Nombre de la Empresa</th>
-                            <th scope="col">Período del Año</th>
-                            <th scope="col">Tipo de Calificación</th>
-                            <th scope="col">Monto Tributario</th>
-                            <th scope="col">Factor Tributario</th>
-                            <th scope="col">Unidad de Valor</th>
-                            <th scope="col">Puntaje de Calificación</th>
-                            <th scope="col">Categoría</th>
-                            <th scope="col">Nivel de Riesgo</th>
-                            <th scope="col">Fecha de Creación</th>
+                            <th scope="col">Empresa</th>
+                            <th scope="col" class="text-center">Período</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col" class="text-end">Monto</th>
+                            <th scope="col" class="text-center">Factor</th>
+                            <th scope="col" class="text-center">Unidad</th>
+                            <th scope="col" class="text-center">Puntaje</th>
+                            <th scope="col" class="text-center">Categoría</th>
+                            <th scope="col" class="text-center">Riesgo</th>
+                            <th scope="col" class="text-center">Fecha</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for calificacion in calificaciones %}
-                        <tr style="background-color: #ffe6e6;">
+                        <tr>
                             <td class="text-center">
-                                <div class="btn-group-vertical" role="group">
-                                    <a href="{% url 'enviar_calificacion_pendiente' calificacion.calificacion_id %}" class="btn btn-sm btn-success mb-1" title="Enviar para aprobación" onclick="return confirm('¿Estás seguro de enviar esta calificación para aprobación?')">
+                                <div class="btn-group-vertical btn-group-sm" role="group">
+                                    <a href="{% url 'enviar_calificacion_pendiente' calificacion.calificacion_id %}" 
+                                       class="btn btn-success btn-sm mb-1" 
+                                       title="Enviar para aprobación" 
+                                       onclick="return confirm('¿Estás seguro de enviar esta calificación para aprobación?')">
                                         <i class="bi bi-send"></i> Enviar
                                     </a>
-                                    <a href="{% url 'editar_calificacion_pendiente' calificacion.calificacion_id %}" class="btn btn-sm btn-warning mb-1" title="Editar">
+                                    <a href="{% url 'editar_calificacion_pendiente' calificacion.calificacion_id %}" 
+                                       class="btn btn-warning btn-sm mb-1" 
+                                       title="Editar">
                                         <i class="bi bi-pencil"></i> Editar
                                     </a>
-                                    <a href="{% url 'eliminar_calificacion_pendiente' calificacion.calificacion_id %}" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta calificación?')">
+                                    <a href="{% url 'eliminar_calificacion_pendiente' calificacion.calificacion_id %}" 
+                                       class="btn btn-danger btn-sm" 
+                                       title="Eliminar" 
+                                       onclick="return confirm('¿Estás seguro de eliminar esta calificación?')">
                                         <i class="bi bi-trash"></i> Eliminar
                                     </a>
                                 </div>
                             </td>
-                            <td>{{ calificacion.rut_empresa.empresa_rut }}</td>
-                            <td>{{ calificacion.rut_empresa.nombre_empresa }}</td>
+                            <td class="text-nowrap"><strong>{{ calificacion.rut_empresa.empresa_rut }}</strong></td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 200px;" title="{{ calificacion.rut_empresa.nombre_empresa }}">
+                                    {{ calificacion.rut_empresa.nombre_empresa }}
+                                </div>
+                            </td>
                             <td class="text-center">{{ calificacion.anio_tributario }}</td>
                             <td>{{ calificacion.tipo_calificacion }}</td>
-                            <td class="text-end">${{ calificacion.monto_tributario|floatformat:2 }}</td>
+                            <td class="text-end text-success fw-semibold">${{ calificacion.monto_tributario|floatformat:0 }}</td>
                             <td class="text-center">{{ calificacion.factor_tributario|floatformat:2 }}</td>
                             <td class="text-center">{{ calificacion.unidad_valor }}</td>
                             <td class="text-center">
@@ -97,7 +109,7 @@
                                     <span class="badge bg-success">Bajo</span>
                                 {% endif %}
                             </td>
-                            <td class="text-center">{{ calificacion.fecha_calculo|date:"d/m/Y H:i" }}</td>
+                            <td class="text-center small text-muted">{{ calificacion.fecha_calculo|date:"d/m/Y H:i" }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -105,19 +117,25 @@
             </div>
 
             <!-- Paginación -->
-            <nav aria-label="Paginación">
-                <ul class="pagination justify-content-center mt-3">
+            <nav aria-label="Paginación" class="mt-4">
+                <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if rut %}&rut={{ rut }}{% endif %}">Anterior</a>
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if rut %}&rut={{ rut }}{% endif %}">
+                                Anterior
+                            </a>
                         </li>
                     {% else %}
                         <li class="page-item disabled"><span class="page-link">Anterior</span></li>
                     {% endif %}
-                    <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span></li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+                    </li>
                     {% if page_obj.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if rut %}&rut={{ rut }}{% endif %}">Siguiente</a>
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if rut %}&rut={{ rut }}{% endif %}">
+                                Siguiente
+                            </a>
                         </li>
                     {% else %}
                         <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
@@ -143,5 +161,89 @@
         </div>
     </div>
 </section>
+
+<style>
+.modern-table {
+    border: none;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.modern-table thead {
+    background: linear-gradient(135deg, #f5732c 0%, #e85d2d 100%);
+    color: white;
+}
+
+.modern-table thead th {
+    border: none;
+    padding: 14px 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.modern-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.2s ease;
+}
+
+.modern-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.modern-table tbody tr:hover {
+    background-color: #fff8f5;
+    box-shadow: 0 2px 4px rgba(245, 115, 44, 0.08);
+}
+
+.modern-table tbody td {
+    padding: 12px 10px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    border: none;
+}
+
+.btn-group-vertical .btn {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+}
+
+.badge {
+    padding: 5px 10px;
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+}
+
+.pagination .page-link {
+    color: #f5732c;
+    border-color: #dee2e6;
+    font-weight: 500;
+}
+
+.pagination .page-link:hover {
+    background-color: #f5732c;
+    border-color: #f5732c;
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: #f8f9fa;
+}
+
+.btn-warning {
+    color: #fff !important;
+}
+
+.btn-warning:hover {
+    color: #fff !important;
+}
+</style>
 
 {% endblock %}

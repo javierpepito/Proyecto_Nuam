@@ -136,16 +136,21 @@
 <div class="accesos-rapidos-title">Accesos Rápidos</div>
 <div class="accesos-rapidos-botones">
     <a href="javascript:void(0);" onclick="abrirModalRut()" class="acceso-btn">
-    Buscar Calificación por RUT de Empresa
-    <span class="acceso-ver"></span>
+        <i class="bi bi-search"></i>
+        Buscar Calificación por RUT de Empresa
+        <span class="acceso-ver">Filtrar por RUT</span>
     </a>
-    <a href="javascript:void(0);" onclick="abrirModalRutPendientes()" class="acceso-btn">
-    Buscar Calificación Pendiente por Rut de Empresa
-    <span class="acceso-ver"></span>
+
+    <a href="javascript:void(0);" onclick="abrirModalRutPendientes()" class="acceso-btn alt">
+        <i class="bi bi-hourglass-split"></i>
+        Buscar Calificación Pendiente por RUT
+        <span class="acceso-ver">Filtrar pendientes</span>
     </a>
-    <a href="{% url 'lista_empresas' %}" class="acceso-btn">
-    Ver Empresas Registradas
-    <span class="acceso-ver"></span>
+
+    <a href="{% url 'lista_empresas' %}" class="acceso-btn alt">
+        <i class="bi bi-building"></i>
+        Ver Empresas Registradas
+        <span class="acceso-ver">Ir al listado</span>
     </a>
 </div>
 
