@@ -55,23 +55,23 @@
                         {% for calificacion in calificaciones %}
                         <tr>
                             <td class="text-center">
-                                <div class="btn-group-vertical btn-group-sm" role="group">
+                                <div class="btn-group-vertical btn-group-sm acciones-calificacion" role="group">
                                     <a href="{% url 'enviar_calificacion_pendiente' calificacion.calificacion_id %}" 
-                                       class="btn btn-success btn-sm mb-1" 
+                                       class="btn btn-enviar-custom btn-sm mb-1" 
                                        title="Enviar para aprobación" 
                                        onclick="return confirm('¿Estás seguro de enviar esta calificación para aprobación?')">
-                                        <i class="bi bi-send"></i> Enviar
+                                        <i class="bi bi-send-fill"></i> Enviar
                                     </a>
                                     <a href="{% url 'editar_calificacion_pendiente' calificacion.calificacion_id %}" 
-                                       class="btn btn-warning btn-sm mb-1" 
+                                       class="btn btn-editar-custom btn-sm mb-1" 
                                        title="Editar">
-                                        <i class="bi bi-pencil"></i> Editar
+                                        <i class="bi bi-pencil-square"></i> Editar
                                     </a>
                                     <a href="{% url 'eliminar_calificacion_pendiente' calificacion.calificacion_id %}" 
-                                       class="btn btn-danger btn-sm" 
+                                       class="btn btn-eliminar-custom btn-sm" 
                                        title="Eliminar" 
                                        onclick="return confirm('¿Estás seguro de eliminar esta calificación?')">
-                                        <i class="bi bi-trash"></i> Eliminar
+                                        <i class="bi bi-trash3-fill"></i> Eliminar
                                     </a>
                                 </div>
                             </td>
@@ -243,6 +243,95 @@
 
 .btn-warning:hover {
     color: #fff !important;
+}
+
+/* Estilos personalizados para botones de acciones */
+.acciones-calificacion {
+    gap: 4px;
+}
+
+.btn-enviar-custom {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25) !important;
+    min-width: 95px !important;
+}
+
+.btn-enviar-custom:hover {
+    background: linear-gradient(135deg, #218838 0%, #1aa179 100%) !important;
+    transform: translateY(-2px) scale(1.03) !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4) !important;
+}
+
+.btn-enviar-custom i {
+    margin-right: 4px;
+}
+
+.btn-editar-custom {
+    background: linear-gradient(135deg, #ff7043 0%, #ff8a65 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(255, 112, 67, 0.25) !important;
+    min-width: 95px !important;
+}
+
+.btn-editar-custom:hover {
+    background: linear-gradient(135deg, #e34f2a 0%, #ff7043 100%) !important;
+    transform: translateY(-2px) scale(1.03) !important;
+    box-shadow: 0 4px 12px rgba(255, 112, 67, 0.4) !important;
+}
+
+.btn-editar-custom i {
+    margin-right: 4px;
+}
+
+.btn-eliminar-custom {
+    background: linear-gradient(135deg, #dc3545 0%, #e63946 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.25) !important;
+    min-width: 95px !important;
+}
+
+.btn-eliminar-custom:hover {
+    background: linear-gradient(135deg, #c82333 0%, #dc3545 100%) !important;
+    transform: translateY(-2px) scale(1.03) !important;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4) !important;
+}
+
+.btn-eliminar-custom i {
+    margin-right: 4px;
+}
+
+/* Efecto de pulso sutil en el botón de enviar */
+@keyframes pulse-green {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+    }
+    50% {
+        box-shadow: 0 2px 12px rgba(40, 167, 69, 0.4);
+    }
+}
+
+.btn-enviar-custom {
+    animation: pulse-green 2s ease-in-out infinite;
+}
+
+.btn-enviar-custom:hover {
+    animation: none;
 }
 </style>
 

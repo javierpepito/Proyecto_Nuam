@@ -6,9 +6,157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="{% static 'Contenedor_Calificaciones/css/base.css' %}">
-    <link rel="icon" href="../static/Contenedor_Calificaciones/images/icono_nuam.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="{% static 'Contenedor_Calificaciones/css/base.css' %}?v=3">
+    <style>
+        /* Estilos inline para botones - Mayor especificidad */
+        .btn.btn-outline-secondary,
+        .btn-outline-secondary {
+            background-color: transparent !important;
+            color: #263342 !important;
+            border: 2px solid #263342 !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        .btn.btn-outline-secondary:hover,
+        .btn-outline-secondary:hover,
+        .btn.btn-outline-secondary:focus,
+        .btn-outline-secondary:focus,
+        .btn.btn-outline-secondary:active,
+        .btn-outline-secondary:active {
+            background-color: #263342 !important;
+            color: #fff !important;
+            border-color: #263342 !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        .btn.btn-outline-primary,
+        .btn-outline-primary {
+            background-color: transparent !important;
+            color: #ff7043 !important;
+            border: 2px solid #ff7043 !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        .btn.btn-outline-primary:hover,
+        .btn-outline-primary:hover,
+        .btn.btn-outline-primary:focus,
+        .btn-outline-primary:focus,
+        .btn.btn-outline-primary:active,
+        .btn-outline-primary:active {
+            background-color: #ff7043 !important;
+            color: #fff !important;
+            border-color: #ff7043 !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        .btn.btn-outline-success,
+        .btn-outline-success {
+            background-color: transparent !important;
+            color: #198754 !important;
+            border: 2px solid #198754 !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        .btn.btn-outline-success:hover,
+        .btn-outline-success:hover,
+        .btn.btn-outline-success:focus,
+        .btn-outline-success:focus,
+        .btn.btn-outline-success:active,
+        .btn-outline-success:active {
+            background-color: #198754 !important;
+            color: #fff !important;
+            border-color: #198754 !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        .btn.btn-outline-danger,
+        .btn-outline-danger {
+            background-color: transparent !important;
+            color: #dc3545 !important;
+            border: 2px solid #dc3545 !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        .btn.btn-outline-danger:hover,
+        .btn-outline-danger:hover,
+        .btn.btn-outline-danger:focus,
+        .btn-outline-danger:focus,
+        .btn.btn-outline-danger:active,
+        .btn-outline-danger:active {
+            background-color: #dc3545 !important;
+            color: #fff !important;
+            border-color: #dc3545 !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        .btn.btn-primary,
+        .btn-primary {
+            background-color: #ff7043 !important;
+            color: #fff !important;
+            border: 2px solid #ff7043 !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        .btn.btn-primary:hover,
+        .btn-primary:hover,
+        .btn.btn-primary:focus,
+        .btn-primary:focus,
+        .btn.btn-primary:active,
+        .btn-primary:active {
+            background-color: #e34f2a !important;
+            color: #fff !important;
+            border-color: #e34f2a !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        .btn.btn-secondary,
+        .btn-secondary {
+            background-color: #6c757d !important;
+            color: #fff !important;
+            border: 2px solid #6c757d !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        .btn.btn-secondary:hover,
+        .btn-secondary:hover,
+        .btn.btn-secondary:focus,
+        .btn-secondary:focus,
+        .btn.btn-secondary:active,
+        .btn-secondary:active {
+            background-color: #5a6268 !important;
+            color: #fff !important;
+            border-color: #5a6268 !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        .btn.btn-outline-orange,
+        .btn-outline-orange {
+            background-color: transparent !important;
+            color: #ff7043 !important;
+            border: 2px solid #ff7043 !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+            transition: all 0.3s ease !important;
+        }
+        .btn.btn-outline-orange:hover,
+        .btn-outline-orange:hover,
+        .btn.btn-outline-orange:focus,
+        .btn-outline-orange:focus,
+        .btn.btn-outline-orange:active,
+        .btn-outline-orange:active {
+            background-color: #ff7043 !important;
+            color: #fff !important;
+            border-color: #ff7043 !important;
+            transform: translateY(-2px) !important;
+        }
+    </style>
+    <link rel="icon" href="{% static 'Contenedor_Calificaciones/images/icono_nuam.svg' %}" type="image/svg+xml">
     <title>
         {% block title %}
         {% endblock %}
@@ -25,5 +173,6 @@
     {% block footer %}
     {% endblock %}
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
 </html>
