@@ -76,22 +76,22 @@
 .footer-logo {
     background: #fff;
     border-radius: 50%;
-    width: 70px;         /* Más grande */
-    height: 70px;
+    width: 90px;
+    height: 90px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.10); /* Sombra suave */
-    border: 2px solid #ff7043;              /* Borde acento */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    border: 2px solid #ff7043;
 }
 
 .footer-logo img {
-    width: 48px;        /* Más grande */
-    height: 48px;
-    object-fit: contain; /* Mantiene proporción */
-    border-radius: 12px; /* Opcional: esquinas suaves si el logo no es redondo */
-    background: transparent; /* Asegura fondo limpio */
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    background: transparent;
+    border-radius: 70%;
 }
 
 .footer-copyright {

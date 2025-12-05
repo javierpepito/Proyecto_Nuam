@@ -124,7 +124,7 @@
 <div class="ultimas-cards">
     {% for cal in calificaciones %}
     <div class="calificacion-card">
-        <div class="calificacion-id">ID: {{ cal.id }}</div>
+        <div class="calificacion-id">ID: {{ cal.calificacion_id }}</div>
         <div class="calificacion-info">Calificador: {{ cal.cuenta_id.nombre }} {{ cal.cuenta_id.apellido }}</div>
         <div class="calificacion-info">RUT: {{ cal.rut_empresa }}</div>
         <div class="calificacion-info">Empresa: {{ cal.nombre_empresa }}</div>
