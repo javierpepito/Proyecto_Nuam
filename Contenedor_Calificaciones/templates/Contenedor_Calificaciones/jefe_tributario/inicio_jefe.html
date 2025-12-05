@@ -17,6 +17,12 @@
         margin: 40px 0 20px 0;
         text-align: left;
         margin-left: 7vw;
+        transition: transform 0.3s, color 0.3s;
+        cursor: default;
+    }
+    .accesos-rapidos-title:hover {
+        transform: scale(1.05);
+        color: #263342;
     }
     .accesos-rapidos-botones {
         display: flex;
@@ -66,6 +72,12 @@
         margin-top: 40px;
         text-align: left;
         margin-left: 7vw;
+        transition: transform 0.3s, color 0.3s;
+        cursor: default;
+    }
+    .ultimas-title:hover {
+        transform: scale(1.05);
+        color: #263342;
     }
     .ultimas-cards {
         display: flex;
@@ -86,17 +98,29 @@
         display: flex;
         flex-direction: column;
         align-items: flex-start;
+        transition: transform 0.3s, box-shadow 0.3s;
+        cursor: pointer;
+    }
+    .calificacion-card:hover {
+        transform: scale(1.15);
+        box-shadow: 0 6px 24px rgba(255, 112, 67, 0.3);
     }
     .calificacion-id {
         color: #ff7043;
-        font-size: 1.2rem;
+        font-size: 1.3rem;
         font-weight: bold;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
+        letter-spacing: 0.3px;
     }
     .calificacion-info {
-        color: #444;
-        font-size: 1rem;
-        margin-bottom: 2px;
+        color: #555;
+        font-size: 0.95rem;
+        margin-bottom: 6px;
+        line-height: 1.5;
+    }
+    .calificacion-info strong {
+        color: #263342;
+        font-weight: 700;
     }
     .ver-detalle-link {
         color: #ff7043;
@@ -125,11 +149,11 @@
     {% for cal in calificaciones %}
     <div class="calificacion-card">
         <div class="calificacion-id">ID: {{ cal.calificacion_id }}</div>
-        <div class="calificacion-info">Calificador: {{ cal.cuenta_id.nombre }} {{ cal.cuenta_id.apellido }}</div>
-        <div class="calificacion-info">RUT: {{ cal.rut_empresa }}</div>
-        <div class="calificacion-info">Empresa: {{ cal.nombre_empresa }}</div>
-        <div class="calificacion-info">Año: {{ cal.anio_tributario }}</div>
-        <div class="calificacion-info">Puntaje: {{ cal.puntaje_calificacion }}</div>
+        <div class="calificacion-info"><strong>Calificador:</strong> {{ cal.cuenta_id.nombre }} {{ cal.cuenta_id.apellido }}</div>
+        <div class="calificacion-info"><strong>RUT:</strong> {{ cal.rut_empresa }}</div>
+        <div class="calificacion-info"><strong>Empresa:</strong> {{ cal.nombre_empresa }}</div>
+        <div class="calificacion-info"><strong>Año:</strong> {{ cal.anio_tributario }}</div>
+        <div class="calificacion-info"><strong>Puntaje:</strong> {{ cal.puntaje_calificacion }}</div>
     </div>
     {% empty %}
     <div style="color:#666;font-size:1.1rem;margin:0 auto;">No hay calificaciones pendientes de aprobación.</div>
