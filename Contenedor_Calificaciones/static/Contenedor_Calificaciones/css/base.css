@@ -76,17 +76,22 @@
 .footer-logo {
     background: #fff;
     border-radius: 50%;
-    width: 55px;
-    height: 55px;
+    width: 70px;         /* Más grande */
+    height: 70px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10); /* Sombra suave */
+    border: 2px solid #ff7043;              /* Borde acento */
 }
 
 .footer-logo img {
-    width: 38px;
-    height: 38px;
+    width: 48px;        /* Más grande */
+    height: 48px;
+    object-fit: contain; /* Mantiene proporción */
+    border-radius: 12px; /* Opcional: esquinas suaves si el logo no es redondo */
+    background: transparent; /* Asegura fondo limpio */
 }
 
 .footer-copyright {
@@ -108,3 +113,130 @@
         align-items: center !important;
     }
 }
+
+:root{
+  --accent: #FF7043;
+  --accent-600: #E34F2A;
+  --bg-card: #ffffff;
+  --muted: #6b6b6b;
+  --radius: 16px;
+  --shadow: 0 18px 40px rgba(20,20,20,0.06);
+  --input-bg: #ffffff;
+  --input-border: rgba(0,0,0,0.08);
+  --input-inner-shadow: rgba(0,0,0,0.02);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Mantengo contenedor y card de la versión anterior */
+.profile-alt-page { padding:48px 20px; min-height:70vh; display:flex; justify-content:center; background: linear-gradient(180deg,#fff,#fbfbfb); }
+.profile-alt-card { max-width:900px; width:100%; display:flex; border-radius:20px; overflow:hidden; box-shadow:var(--shadow); background:var(--bg-card); border:1px solid rgba(0,0,0,0.04); }
+
+/* Left / right panels (sin cambios importantes) */
+.profile-alt-left { background: linear-gradient(180deg, rgba(255,112,67,0.12), rgba(255,112,67,0.06)); padding:28px 24px; min-width:220px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; }
+.profile-alt-avatar { width:120px; height:120px; border-radius:999px; background: linear-gradient(135deg,var(--accent), var(--accent-600)); display:flex; align-items:center; justify-content:center; color:white; font-size:3.2rem; box-shadow: 0 10px 30px rgba(227,79,42,0.16); border:6px solid rgba(255,255,255,0.08); }
+.profile-alt-left .name { color:var(--accent-600); font-weight:700; font-size:1.05rem; margin-top:6px; }
+.profile-alt-left .meta { color:var(--muted); font-size:0.9rem; margin-top:2px; }
+
+/* RIGHT PANEL */
+.profile-alt-right { flex:1; padding:28px 34px; display:flex; flex-direction:column; justify-content:center; }
+
+/* FORM: ahora inputs más visibles (cajas rellenas) */
+.profile-alt-form { width:100%; display:flex; flex-direction:column; gap:14px; }
+
+.profile-alt-form label { display:block; font-weight:700; font-size:0.95rem; color:#222; margin-bottom:6px; }
+
+/* Nuevo estilo para inputs: caja rellena, borde definido, padding generoso */
+.profile-alt-input {
+  display:block;
+  width:100%;
+  box-sizing:border-box;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  padding:12px 14px;
+  font-size:1rem;
+  color:#222;
+  outline:none;
+  box-shadow: inset 0 1px 0 var(--input-inner-shadow);
+  transition: box-shadow .14s ease, transform .12s ease, border-color .12s ease;
+  text-align:center;
+}
+
+/* Mejor contraste para placeholder */
+.profile-alt-input::placeholder { color: rgba(0,0,0,0.28); }
+
+/* foco claro y visible */
+.profile-alt-input:focus {
+  border-color: rgba(255,112,67,0.45);
+  box-shadow: 0 10px 28px rgba(255,112,67,0.08), 0 0 0 6px rgba(255,112,67,0.08);
+  transform: translateY(-2px);
+}
+
+/* Si prefieres inputs alineados a la izquierda (opcional): añadir .left-text a los inputs */
+.profile-alt-input.left-text { text-align:left; padding-left:14px; }
+
+/* Equipo (campo no editable) igual apariencia que input */
+.profile-alt-team {
+  background: #fafafa;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 12px;
+  padding:12px 14px;
+  text-align:center;
+  color:#222;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* Botón destacable */
+.btn-alt-save {
+  background: var(--accent);
+  color:#fff;
+  border:none;
+  padding:12px 18px;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow: 0 14px 34px rgba(255,112,67,0.14);
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+  width:100%;
+}
+
+.btn-alt-save:hover { transform: translateY(-3px); box-shadow: 0 20px 44px rgba(227,79,42,0.18); }
+
+/* Helper text más contraste */
+.profile-alt-help { text-align:center; color:#6b6b6b; font-size:0.88rem; margin-top:10px; }
+
+/* Responsivo: apilar */
+@media (max-width:720px){
+  .profile-alt-card { flex-direction:column; }
+  .profile-alt-left { padding:20px; min-width:unset; }
+  .profile-alt-right { padding:20px; }
+  .profile-alt-avatar { width:100px; height:100px; font-size:2.6rem; }
+  .profile-alt-form { gap:10px; }
+}
+
+:root{ --white: #ffffff; --semi: rgba(255,255,255,0.16); }
+
+.btn-hamburger-b{
+  width:44px;
+  height:44px;
+  padding:0;
+  border-radius:12px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background: transparent;
+  border: 2px solid var(--white);
+  box-shadow: none;
+  cursor:pointer;
+  transition: background .12s ease, transform .12s ease;
+}
+.btn-hamburger-b .bi{ font-size:1.15rem; color:#fff !important; }
+.btn-hamburger-b:hover {
+    background: #fff;
+    transform: translateY(-2px);
+}
+.btn-hamburger-b:hover .bi {
+    color: #232323 !important;
+}
+.btn-hamburger-b:focus{ outline:none; box-shadow: 0 0 0 6px rgba(255,255,255,0.08); }
+@media (max-width:500px){ .btn-hamburger-b{ width:48px; height:48px; } .btn-hamburger-b .bi{ font-size:1.35rem; } }

@@ -106,7 +106,7 @@ def Inicio_Calificador(request):
     calificaciones = CalificacionTributaria.objects.filter(
         cuenta_id=cuenta_id,
         estado_calificacion='por_enviar'
-    ).order_by('-fecha_calculo')[:6]
+    ).order_by('-fecha_calculo')[:5]
     context = {
         'calificaciones': calificaciones,
     }
@@ -138,7 +138,7 @@ def Inicio_Jefe(request):
         calificaciones = CalificacionTributaria.objects.filter(
             cuenta_id__in=cuentas_calificadores,
             estado_calificacion='por_aprobar'
-        ).select_related('cuenta_id', 'rut_empresa').order_by('-fecha_calculo')[:6]
+        ).select_related('cuenta_id', 'rut_empresa').order_by('-fecha_calculo')[:5]
     
     context = {
         'calificaciones': calificaciones,
