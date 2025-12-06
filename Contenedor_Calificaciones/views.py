@@ -652,18 +652,30 @@ def tus_calificaciones(request):
         messages.error(request, 'Sesión inválida. Por favor, inicie sesión nuevamente.')
         return redirect('identificacion')
     
-    rut = request.GET.get('rut')
+    # Obtener parámetros de filtro
+    rut = request.GET.get('rut', '').strip()
+    nombre_empresa = request.GET.get('nombre_empresa', '').strip()
+    anio = request.GET.get('anio', '').strip()
+    page_size = int(request.GET.get('page_size', 10))
+    
+    # Filtrar calificaciones
     calificaciones_qs = CalificacionTributaria.objects.filter(
         cuenta_id=cuenta,
         estado_calificacion='por_aprobar'
     ).select_related('rut_empresa').order_by('-fecha_calculo')
     
     if rut:
-        calificaciones_qs = calificaciones_qs.filter(rut_empresa=rut)
+        calificaciones_qs = calificaciones_qs.filter(rut_empresa__empresa_rut__icontains=rut)
+    
+    if nombre_empresa:
+        calificaciones_qs = calificaciones_qs.filter(rut_empresa__nombre_empresa__icontains=nombre_empresa)
+    
+    if anio:
+        calificaciones_qs = calificaciones_qs.filter(anio_tributario=anio)
     
     # Paginación
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(calificaciones_qs, 10)  # 10 calificaciones por página
+    paginator = Paginator(calificaciones_qs, page_size)
     page = request.GET.get('page')
     
     try:
@@ -678,7 +690,7 @@ def tus_calificaciones(request):
         'total_calificaciones': paginator.count,
         'page_obj': calificaciones,
         'paginator': paginator,
-        'rut': rut,
+        'page_size': page_size,
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/tus_calificaciones.html', context)
@@ -698,19 +710,30 @@ def calificaciones_pendientes(request):
         messages.error(request, 'Sesión inválida. Por favor, inicie sesión nuevamente.')
         return redirect('identificacion')
     
+    # Obtener parámetros de filtro
+    rut = request.GET.get('rut', '').strip()
+    nombre_empresa = request.GET.get('nombre_empresa', '').strip()
+    anio = request.GET.get('anio', '').strip()
+    page_size = int(request.GET.get('page_size', 10))
+    
     # Obtener las calificaciones del usuario en estado 'por_enviar'
-    rut = request.GET.get('rut')
     calificaciones_qs = CalificacionTributaria.objects.filter(
         cuenta_id=cuenta,
         estado_calificacion='por_enviar'
     ).select_related('rut_empresa').order_by('-fecha_calculo')
     
     if rut:
-        calificaciones_qs = calificaciones_qs.filter(rut_empresa=rut)
+        calificaciones_qs = calificaciones_qs.filter(rut_empresa__empresa_rut__icontains=rut)
+    
+    if nombre_empresa:
+        calificaciones_qs = calificaciones_qs.filter(rut_empresa__nombre_empresa__icontains=nombre_empresa)
+    
+    if anio:
+        calificaciones_qs = calificaciones_qs.filter(anio_tributario=anio)
     
     # Paginación
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(calificaciones_qs, 10)  # 10 calificaciones por página
+    paginator = Paginator(calificaciones_qs, page_size)
     page = request.GET.get('page')
     
     try:
@@ -725,7 +748,7 @@ def calificaciones_pendientes(request):
         'total_calificaciones': paginator.count,
         'page_obj': calificaciones,
         'paginator': paginator,
-        'rut': rut,
+        'page_size': page_size,
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/calificaciones_pendientes.html', context)

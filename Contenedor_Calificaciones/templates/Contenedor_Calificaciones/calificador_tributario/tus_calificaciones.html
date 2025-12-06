@@ -20,6 +20,43 @@
                         <span class="badge bg-warning text-dark">{{ total_calificaciones }} calificación{{ total_calificaciones|pluralize:"es" }}</span>
                     {% endif %}
                 </p>
+                
+                <!-- Filtros -->
+                <form method="get" class="row g-2 align-items-end mt-3 p-3 bg-light rounded">
+                    <div class="col-sm-6 col-md-3">
+                        <label for="rut_empresa" class="form-label fw-semibold">RUT Empresa</label>
+                        <input type="text" id="rut_empresa" name="rut" class="form-control" 
+                               placeholder="Ej: 12.345.678-9" value="{{ request.GET.rut }}">
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <label for="nombre_empresa" class="form-label fw-semibold">Nombre Empresa</label>
+                        <input type="text" id="nombre_empresa" name="nombre_empresa" class="form-control" 
+                               placeholder="Buscar por nombre" value="{{ request.GET.nombre_empresa }}">
+                    </div>
+                    <div class="col-sm-6 col-md-2">
+                        <label for="anio" class="form-label fw-semibold">Año Tributario</label>
+                        <input type="number" id="anio" name="anio" class="form-control" 
+                               placeholder="Ej: 2025" min="2000" max="2100" value="{{ request.GET.anio }}">
+                    </div>
+                    <div class="col-sm-6 col-md-2">
+                        <label for="page_size" class="form-label fw-semibold">Mostrar</label>
+                        <select id="page_size" name="page_size" class="form-select">
+                            <option value="10" {% if page_size == 10 %}selected{% endif %}>10</option>
+                            <option value="20" {% if page_size == 20 %}selected{% endif %}>20</option>
+                            <option value="30" {% if page_size == 30 %}selected{% endif %}>30</option>
+                            <option value="50" {% if page_size == 50 %}selected{% endif %}>50</option>
+                            <option value="100" {% if page_size == 100 %}selected{% endif %}>100</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-funnel-fill"></i> Filtrar
+                        </button>
+                        <a href="{% url 'tus_calificaciones' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
 
