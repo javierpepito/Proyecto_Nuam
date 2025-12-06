@@ -93,10 +93,13 @@
                         <tr>
                             <td class="text-center">
                                 <div class="btn-group-vertical btn-group-sm acciones-calificacion" role="group">
-                                    <a href="{% url 'enviar_calificacion_pendiente' calificacion.calificacion_id %}" 
-                                       class="btn btn-enviar-custom btn-sm mb-1" 
-                                       title="Enviar para aprobación" 
-                                       onclick="return confirm('¿Estás seguro de enviar esta calificación para aprobación?')">
+                                    <a href="#"
+                                        class="btn btn-enviar-custom btn-sm mb-1"
+                                        title="Enviar para aprobación"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalEnviarCalificacion"
+                                        data-calificacion-id="{{ calificacion.calificacion_id }}"
+                                        data-empresa="{{ calificacion.rut_empresa.nombre_empresa }}">
                                         <i class="bi bi-send-fill"></i> Enviar
                                     </a>
                                     <a href="{% url 'editar_calificacion_pendiente' calificacion.calificacion_id %}" 
@@ -371,5 +374,109 @@
     animation: none;
 }
 </style>
+
+<!-- Modal de confirmación de envío -->
+<div class="modal fade" id="modalEnviarCalificacion" tabindex="-1" aria-labelledby="modalEnviarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            
+            <!-- Header -->
+            <div class="modal-header text-white position-relative" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); border: none; padding: 24px;">
+                <div class="w-100 text-center">
+                    <div class="mb-2">
+                        <i class="bi bi-send-check-fill" style="font-size: 3. 5rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));"></i>
+                    </div>
+                    <h4 class="modal-title fw-bold mb-0" id="modalEnviarLabel">
+                        ¿Enviar Calificación? 
+                    </h4>
+                </div>
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body text-center py-5 px-4">
+                <div class="mb-4">
+                    <i class="bi bi-file-earmark-check" style="font-size: 4rem; color: #28a745; opacity: 0.3;"></i>
+                </div>
+                <h5 class="mb-3 fw-bold text-dark">Estás a punto de enviar esta calificación</h5>
+                <p class="text-muted mb-3" style="font-size: 1. 05rem;">
+                    <strong id="empresaModal"></strong> será notificada y la calificación pasará a revisión.
+                </p>
+                
+                <!-- Información adicional -->
+                <div class="alert alert-success border-0 d-flex align-items-center justify-content-center gap-2" style="background: rgba(40, 167, 69, 0.1); border-radius: 12px;">
+                    <i class="bi bi-info-circle-fill text-success"></i>
+                    <small class="mb-0 text-dark">No podrás editar la calificación después de enviarla</small>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer border-0 justify-content-center pb-4 pt-0 px-4">
+                <button type="button" class="btn btn-lg px-4 py-2" data-bs-dismiss="modal" style="background: #6c757d; color: white; border-radius: 12px; font-weight: 600; min-width: 140px; transition: all 0.3s ease;">
+                    <i class="bi bi-x-circle me-2"></i> Cancelar
+                </button>
+                <a href="#" id="btnConfirmarEnvio" class="btn btn-lg px-4 py-2" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 12px; font-weight: 600; min-width: 140px; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); transition: all 0.3s ease; text-decoration: none;">
+                    <i class="bi bi-send-check me-2"></i> Sí, Enviar
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+/* Animaciones para el modal de envío */
+#modalEnviarCalificacion .modal-content {
+    animation: modal-slide-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modal-slide-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Hover botones */
+#modalEnviarCalificacion .modal-footer .btn:first-of-type:hover {
+    background: #5a6268 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+}
+
+#modalEnviarCalificacion .modal-footer #btnConfirmarEnvio:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.5) !important;
+}
+</style>
+
+<script>
+// Script para manejar el envío
+const modalEnviar = document.getElementById('modalEnviarCalificacion');
+let urlEnvioActual = null;
+
+modalEnviar.addEventListener('show.bs.modal', function (event) {
+    const button = event.relatedTarget;
+    const calificacionId = button.getAttribute('data-calificacion-id');
+    const empresa = button.getAttribute('data-empresa');
+    
+    // Actualizar nombre de empresa en el modal
+    document.getElementById('empresaModal').textContent = empresa;
+    
+    // Construir la URL de envío
+    urlEnvioActual = `/calificaciones/enviar/${calificacionId}/`;
+});
+
+document.getElementById('btnConfirmarEnvio').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (urlEnvioActual) {
+        window.location.href = urlEnvioActual;
+    }
+});
+</script>
 
 {% endblock %}
