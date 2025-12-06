@@ -16,6 +16,88 @@
     background-color: #f5732c;
 }
 
+/* ========================================
+   NAVBAR MEJORADO - VERSIÓN A (SUTIL)
+   ======================================== */
+
+/* Botones del navbar - Estado normal */
+.navbar .btn-outline-light {
+    background: transparent !important;
+    color: #fff !important;
+    border: 2px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 10px !important;
+    padding: 10px 18px !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hover effect - Relleno completo con elevación */
+.navbar .btn-outline-light:hover {
+    background: #fff !important;
+    color: #f5732c !important;
+    border-color: #fff !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0. 4) !important;
+}
+
+/* Botón activo (página actual) */
+.navbar .btn-outline-light.active,
+.navbar .btn-outline-light:active {
+    background: #fff !important;
+    color: #f5732c !important;
+    border-color: #fff !important;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.35) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Focus state (accesibilidad) */
+.navbar .btn-outline-light:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Botón hamburguesa mejorado */
+.btn-hamburger-b{
+    width:44px;
+    height:44px;
+    padding:0;
+    border-radius:12px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0. 08);
+    cursor:pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-hamburger-b .bi{ 
+    font-size:1.3rem; 
+    color:#fff ! important;
+    transition: color 0.3s ease;
+}
+
+.btn-hamburger-b:hover {
+    background: #fff !important;
+    border-color: #fff !important;
+    transform: translateY(-3px) rotate(90deg);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+}
+
+.btn-hamburger-b:hover .bi {
+    color: #f5732c !important;
+}
+
+.btn-hamburger-b:focus{ 
+    outline:none; 
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.25); 
+}
+
 /* Footer */
 .footer-nuam {
     background: #232323;
@@ -70,7 +152,7 @@
 .footer-logo-col {
     display: flex;
     flex-direction: column;
-    align-items: center !important;
+    align-items: center ! important;
     justify-content: center !important;
     text-align: center;
     min-width: 180px;
@@ -118,9 +200,9 @@
     background: #232323;
     margin-top: 0;
 }
+
 @media (max-width: 900px) {
     .footer-content {
-     
         flex-direction: column;
         align-items: center;
         gap: 18px;
@@ -143,25 +225,20 @@
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 }
 
-/* Mantengo contenedor y card de la versión anterior */
 .profile-alt-page { padding:48px 20px; min-height:70vh; display:flex; justify-content:center; background: linear-gradient(180deg,#fff,#fbfbfb); }
 .profile-alt-card { max-width:900px; width:100%; display:flex; border-radius:20px; overflow:hidden; box-shadow:var(--shadow); background:var(--bg-card); border:1px solid rgba(0,0,0,0.04); }
 
-/* Left / right panels (sin cambios importantes) */
 .profile-alt-left { background: linear-gradient(180deg, rgba(255,112,67,0.12), rgba(255,112,67,0.06)); padding:28px 24px; min-width:220px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; }
-.profile-alt-avatar { width:120px; height:120px; border-radius:999px; background: linear-gradient(135deg,var(--accent), var(--accent-600)); display:flex; align-items:center; justify-content:center; color:white; font-size:3.2rem; box-shadow: 0 10px 30px rgba(227,79,42,0.16); border:6px solid rgba(255,255,255,0.08); }
+.profile-alt-avatar { width:120px; height:120px; border-radius:999px; background: linear-gradient(135deg,var(--accent), var(--accent-600)); display:flex; align-items:center; justify-content:center; color:white; font-size:3. 2rem; box-shadow: 0 10px 30px rgba(227,79,42,0.16); border:6px solid rgba(255,255,255,0.08); }
 .profile-alt-left .name { color:var(--accent-600); font-weight:700; font-size:1.05rem; margin-top:6px; }
 .profile-alt-left .meta { color:var(--muted); font-size:0.9rem; margin-top:2px; }
 
-/* RIGHT PANEL */
 .profile-alt-right { flex:1; padding:28px 34px; display:flex; flex-direction:column; justify-content:center; }
 
-/* FORM: ahora inputs más visibles (cajas rellenas) */
 .profile-alt-form { width:100%; display:flex; flex-direction:column; gap:14px; }
 
 .profile-alt-form label { display:block; font-weight:700; font-size:0.95rem; color:#222; margin-bottom:6px; }
 
-/* Nuevo estilo para inputs: caja rellena, borde definido, padding generoso */
 .profile-alt-input {
   display:block;
   width:100%;
@@ -178,20 +255,16 @@
   text-align:center;
 }
 
-/* Mejor contraste para placeholder */
 .profile-alt-input::placeholder { color: rgba(0,0,0,0.28); }
 
-/* foco claro y visible */
 .profile-alt-input:focus {
   border-color: rgba(255,112,67,0.45);
   box-shadow: 0 10px 28px rgba(255,112,67,0.08), 0 0 0 6px rgba(255,112,67,0.08);
   transform: translateY(-2px);
 }
 
-/* Si prefieres inputs alineados a la izquierda (opcional): añadir .left-text a los inputs */
 .profile-alt-input.left-text { text-align:left; padding-left:14px; }
 
-/* Equipo (campo no editable) igual apariencia que input */
 .profile-alt-team {
   background: #fafafa;
   border: 1px solid rgba(0,0,0,0.06);
@@ -202,7 +275,6 @@
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
-/* Botón destacable */
 .btn-alt-save {
   background: var(--accent);
   color:#fff;
@@ -218,10 +290,8 @@
 
 .btn-alt-save:hover { transform: translateY(-3px); box-shadow: 0 20px 44px rgba(227,79,42,0.18); }
 
-/* Helper text más contraste */
 .profile-alt-help { text-align:center; color:#6b6b6b; font-size:0.88rem; margin-top:10px; }
 
-/* Responsivo: apilar */
 @media (max-width:720px){
   .profile-alt-card { flex-direction:column; }
   .profile-alt-left { padding:20px; min-width:unset; }
@@ -232,7 +302,6 @@
 
 :root{ --white: #ffffff; --semi: rgba(255,255,255,0.16); }
 
-/* Estilos para logo navbar clickeable */
 .navbar-brand {
   position: relative;
   display: inline-block;
@@ -276,36 +345,10 @@
     filter: brightness(1);
   }
   50% {
-    filter: brightness(1.05);
+    filter: brightness(1. 05);
   }
 }
 
-.btn-hamburger-b{
-  width:44px;
-  height:44px;
-  padding:0;
-  border-radius:12px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  background: transparent;
-  border: 2px solid var(--white);
-  box-shadow: none;
-  cursor:pointer;
-  transition: background .12s ease, transform .12s ease;
-}
-.btn-hamburger-b .bi{ font-size:1.15rem; color:#fff !important; }
-.btn-hamburger-b:hover {
-    background: #fff;
-    transform: translateY(-2px);
-}
-.btn-hamburger-b:hover .bi {
-    color: #232323 !important;
-}
-.btn-hamburger-b:focus{ outline:none; box-shadow: 0 0 0 6px rgba(255,255,255,0.08); }
-@media (max-width:500px){ .btn-hamburger-b{ width:48px; height:48px; } .btn-hamburger-b .bi{ font-size:1.35rem; } }
-
-/* Botón acceso rápido: estilo llamativo y consistente */
 .acceso-btn {
   background: linear-gradient(135deg, #ff7043 0%, #e34f2a 100%);
   color: #fff;
@@ -346,14 +389,13 @@
   opacity: 0.9;
 }
 
-/* Variante oscura para el segundo botón (contraste) */
-.acceso-btn.alt {
+.acceso-btn .alt {
   background: #263342;
   border-color: rgba(255,255,255,0.12);
   box-shadow: 0 10px 26px rgba(38,51,66,0.28);
 }
 
-.acceso-btn.alt:hover {
+.acceso-btn .alt:hover {
   box-shadow: 0 20px 38px rgba(38,51,66,0.34);
   filter: brightness(1.04);
 }
@@ -365,11 +407,8 @@
   justify-content: center;
 }
 
-/* ========================================
-   ESTILOS GLOBALES PARA BOTONES BOOTSTRAP
-   ======================================== */
+/* ESTILOS GLOBALES PARA BOTONES BOOTSTRAP */
 
-/* Botones outline-secondary (Volver al inicio, Limpiar, etc) */
 .btn-outline-secondary {
   background: transparent !important;
   color: #263342 !important;
@@ -398,14 +437,13 @@
   outline: none !important;
 }
 
-/* Botones outline-primary */
 .btn-outline-primary {
   background: transparent !important;
   color: #ff7043 !important;
   border: 2px solid #ff7043 !important;
   border-radius: 10px !important;
   padding: 10px 20px !important;
-  font-weight: 600 !important;
+  font-weight: 600 ! important;
   transition: all 0.3s ease !important;
   box-shadow: 0 2px 8px rgba(255, 112, 67, 0.15) !important;
 }
@@ -420,14 +458,13 @@
 
 .btn-outline-primary:focus,
 .btn-outline-primary:active {
-  background: #ff7043 !important;
+  background: #ff7043 ! important;
   color: #fff !important;
   border-color: #ff7043 !important;
-  box-shadow: 0 0 0 4px rgba(255, 112, 67, 0.2) !important;
-  outline: none !important;
+  box-shadow: 0 0 0 4px rgba(255, 112, 67, 0.2) ! important;
+  outline: none ! important;
 }
 
-/* Botones outline-success */
 .btn-outline-success {
   background: transparent !important;
   color: #198754 !important;
@@ -449,21 +486,20 @@
 
 .btn-outline-success:focus,
 .btn-outline-success:active {
-  background: #198754 !important;
+  background: #198754 ! important;
   color: #fff !important;
   border-color: #198754 !important;
   box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.2) !important;
   outline: none !important;
 }
 
-/* Botones outline-danger */
 .btn-outline-danger {
   background: transparent !important;
   color: #dc3545 !important;
   border: 2px solid #dc3545 !important;
   border-radius: 10px !important;
   padding: 10px 20px !important;
-  font-weight: 600 !important;
+  font-weight: 600 ! important;
   transition: all 0.3s ease !important;
   box-shadow: 0 2px 8px rgba(220, 53, 69, 0.15) !important;
 }
@@ -485,12 +521,11 @@
   outline: none !important;
 }
 
-/* Botones primary (sólidos naranja) */
 .btn-primary {
   background: #ff7043 !important;
   color: #fff !important;
   border: 2px solid #ff7043 !important;
-  border-radius: 10px !important;
+  border-radius: 10px ! important;
   padding: 10px 20px !important;
   font-weight: 600 !important;
   transition: all 0.3s ease !important;
@@ -508,17 +543,16 @@
 .btn-primary:active {
   background: #e34f2a !important;
   border-color: #e34f2a !important;
-  box-shadow: 0 0 0 4px rgba(255, 112, 67, 0.3) !important;
+  box-shadow: 0 0 0 4px rgba(255, 112, 67, 0. 3) !important;
   outline: none !important;
 }
 
-/* Botones secondary (grises) */
 .btn-secondary {
   background: #6c757d !important;
   color: #fff !important;
   border: 2px solid #6c757d !important;
   border-radius: 10px !important;
-  padding: 10px 20px !important;
+  padding: 10px 20px ! important;
   font-weight: 600 !important;
   transition: all 0.3s ease !important;
   box-shadow: 0 2px 8px rgba(108, 117, 125, 0.25) !important;
@@ -526,7 +560,7 @@
 
 .btn-secondary:hover {
   background: #5a6268 !important;
-  border-color: #5a6268 !important;
+  border-color: #5a6268 ! important;
   transform: translateY(-2px) !important;
   box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4) !important;
 }
@@ -539,14 +573,13 @@
   outline: none !important;
 }
 
-/* Botones outline-orange (personalizado) */
 .btn-outline-orange {
   background: transparent !important;
   color: #ff7043 !important;
   border: 2px solid #ff7043 !important;
   border-radius: 10px !important;
   padding: 10px 20px !important;
-  font-weight: 600 !important;
+  font-weight: 600 ! important;
   transition: all 0.3s ease !important;
   box-shadow: 0 2px 8px rgba(255, 112, 67, 0.15) !important;
 }
@@ -561,10 +594,105 @@
 
 .btn-outline-orange:focus,
 .btn-outline-orange:active {
-  background: #ff7043 !important;
+  background: #ff7043 ! important;
   color: #fff !important;
   border-color: #ff7043 !important;
-  box-shadow: 0 0 0 4px rgba(255, 112, 67, 0.2) !important;
-  outline: none !important;
+  box-shadow: 0 0 0 4px rgba(255, 112, 67, 0.2) ! important;
+  outline: none ! important;
 }
 
+/* ========================================
+   DROPDOWN MEJORADO - PERFIL/CERRAR SESIÓN
+   ======================================== */
+
+/* Menú desplegable */
+.dropdown-menu {
+    background: #fff ! important;
+    border: 2px solid rgba(245, 115, 44, 0.15) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    padding: 8px ! important;
+    min-width: 200px !important;
+    margin-top: 8px !important;
+    animation: dropdown-slide-in 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animación de entrada */
+@keyframes dropdown-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Items del dropdown */
+.dropdown-item {
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    font-weight: 500 !important;
+    font-size: 0.95rem !important;
+    color: #263342 !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+/* Hover de items */
+.dropdown-item:hover {
+    background: linear-gradient(135deg, #ff7043 0%, #f5732c 100%) !important;
+    color: #fff !important;
+    transform: translateX(4px) !important;
+}
+
+/* Iconos dentro del dropdown */
+.dropdown-item i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* Separador (línea divisoria) */
+.dropdown-divider {
+    border-top: 1px solid rgba(245, 115, 44, 0.2) !important;
+    margin: 6px 0 !important;
+}
+
+/* Focus state (accesibilidad) */
+.dropdown-item:focus {
+    background: linear-gradient(135deg, #ff7043 0%, #f5732c 100%) ! important;
+    color: #fff !important;
+    outline: none !important;
+}
+
+/* Hover de PERFIL - NARANJA (forzado) */
+.dropdown-item:first-of-type:hover {
+    background: linear-gradient(135deg, #ff7043 0%, #f5732c 100%) !important;
+}
+
+/* Hover de CERRAR SESIÓN - ROJO */
+a[href*="logout"].dropdown-item:hover {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) ! important;
+}
+
+/* Botón hamburguesa activo (cuando dropdown está abierto) */
+.dropdown.show .btn-hamburger-b {
+    background: #fff !important;
+    border-color: #fff !important;
+    transform: translateY(-2px) rotate(90deg);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+}
+
+.dropdown.show .btn-hamburger-b .bi {
+    color: #f5732c !important;
+}
+
+/* Hover ROJO para "Cerrar Sesión" cuando tiene modal */
+.dropdown-item[data-bs-target="#modalCerrarSesion"]:hover {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !  important;
+    color: #fff ! important;
+}
