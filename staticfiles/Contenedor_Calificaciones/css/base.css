@@ -104,8 +104,8 @@
 }
 
 .footer-logo img {
-    width: 130px;
-    height: 130px;
+    width: 60px;
+    height: 60px;
     object-fit: contain;
     background: transparent;
 }
@@ -231,6 +231,54 @@
 }
 
 :root{ --white: #ffffff; --semi: rgba(255,255,255,0.16); }
+
+/* Estilos para logo navbar clickeable */
+.navbar-brand {
+  position: relative;
+  display: inline-block;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.navbar-brand::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 80%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #ff7043, transparent);
+  border-radius: 2px;
+  transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover {
+  transform: translateY(-2px);
+}
+
+.navbar-brand:hover::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+.navbar-brand img {
+  transition: filter 0.3s ease;
+  animation: navbar-logo-pulse 3s ease-in-out infinite;
+}
+
+.navbar-brand:hover img {
+  filter: brightness(1.1) drop-shadow(0 0 8px rgba(255, 112, 67, 0.4));
+  animation: none;
+}
+
+@keyframes navbar-logo-pulse {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.05);
+  }
+}
 
 .btn-hamburger-b{
   width:44px;

@@ -57,7 +57,7 @@
         box-shadow: 0 6px 24px #ff704344;
     }
     .acceso-ver {
-        color: #ff7043;
+        color: #fff;
         font-weight: bold;
         font-size: 1rem;
         margin-top: 18px;
@@ -136,16 +136,16 @@
 <div class="accesos-rapidos-title">Accesos Rápidos</div>
 <div class="accesos-rapidos-botones">
     <a href="javascript:void(0);" onclick="abrirModalRut()" class="acceso-btn">
-    Buscar Calificación por RUT de Empresa
-    <span class="acceso-ver"></span>
+        <i class="bi bi-search"></i>
+        Buscar Calificación por RUT de Empresa
     </a>
     <a href="javascript:void(0);" onclick="abrirModalRutPendientes()" class="acceso-btn">
-    Buscar Calificación Pendiente por Rut de Empresa
-    <span class="acceso-ver"></span>
+        <i class="bi bi-hourglass-split"></i>
+        Buscar Calificación Pendiente por RUT
     </a>
     <a href="{% url 'lista_empresas' %}" class="acceso-btn">
-    Ver Empresas Registradas
-    <span class="acceso-ver"></span>
+        <i class="bi bi-building"></i>
+        Ver Empresas Registradas
     </a>
 </div>
 
