@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-tbhmc*d1n6b9u#syv*d*%f=@kw5$34ya7p&@sr(d$iqg2ps9m*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['app-nuam-bf1dd339e878.herokuapp.com/',]
+ALLOWED_HOSTS = ['app-nuam-bf1dd339e878.herokuapp.com']
 
 
 # Application definition
