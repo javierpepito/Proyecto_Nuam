@@ -1,0 +1,1 @@
+web: gunicorn Proyecto_Nuam.wsgi --log-file -
