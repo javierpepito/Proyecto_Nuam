@@ -154,7 +154,7 @@
     {% for cal in calificaciones %}
     <div class="calificacion-card">
         <div class="calificacion-id">ID: {{ cal.calificacion_id }}</div>
-        <div class="calificacion-info"><strong>Rut:</strong> {{ cal.rut_empresa }}</div>
+        <div class="calificacion-info"><strong>Rut:</strong> {{ cal.rut_empresa.empresa_rut }}</div>
         <div class="calificacion-info"><strong>Empresa:</strong> {{ cal.nombre_empresa }}</div>
         <div class="calificacion-info"><strong>Año:</strong> {{ cal.anio_tributario }}</div>
         <div class="calificacion-info"><strong>Monto:</strong> {{ cal.monto_tributario }}</div>
