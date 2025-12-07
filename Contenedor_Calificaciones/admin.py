@@ -88,7 +88,7 @@ class JefeEquipoAdmin(admin.ModelAdmin):
 class EquipoCalificadorInline(admin.TabularInline):
 	# Inline para editar la relación intermedia (equipo <-> calificador)
 	model = EquipoCalificador
-	extra = 0
+	extra = 1
 	verbose_name = "Miembro del equipo"
 	verbose_name_plural = "Miembros del equipo"
 	can_delete = True
