@@ -12,23 +12,23 @@
         <div class="row mb-4">
             <div class="col-12">
                 <h2 class="fw-bold" style="color: #f5732c;">
-                    <i class="bi bi-send-check"></i> Calificaciones Enviadas para Aprobación
+                    <i class="bi bi-send-check"></i> Tus Calificaciones
                 </h2>
                 <p class="text-muted">
-                    Aquí puedes ver todas las calificaciones que has enviado y están esperando aprobación del jefe de equipo.
+                    Aquí puedes ver todas tus calificaciones: pendientes de aprobación, aprobadas y rechazadas.
                     {% if total_calificaciones > 0 %}
-                        <span class="badge bg-warning text-dark">{{ total_calificaciones }} calificación{{ total_calificaciones|pluralize:"es" }}</span>
+                        <span class="badge bg-info text-dark">{{ total_calificaciones }} calificación{{ total_calificaciones|pluralize:"es" }}</span>
                     {% endif %}
                 </p>
                 
                 <!-- Filtros -->
                 <form method="get" class="row g-2 align-items-end mt-3 p-3 bg-light rounded">
-                    <div class="col-sm-6 col-md-3">
+                    <div class="col-sm-6 col-md-2">
                         <label for="rut_empresa" class="form-label fw-semibold">RUT Empresa</label>
                         <input type="text" id="rut_empresa" name="rut" class="form-control" 
                                placeholder="Ej: 12.345.678-9" value="{{ request.GET.rut }}">
                     </div>
-                    <div class="col-sm-6 col-md-3">
+                    <div class="col-sm-6 col-md-2">
                         <label for="nombre_empresa" class="form-label fw-semibold">Nombre Empresa</label>
                         <input type="text" id="nombre_empresa" name="nombre_empresa" class="form-control" 
                                placeholder="Buscar por nombre" value="{{ request.GET.nombre_empresa }}">
@@ -37,6 +37,15 @@
                         <label for="anio" class="form-label fw-semibold">Año Tributario</label>
                         <input type="number" id="anio" name="anio" class="form-control" 
                                placeholder="Ej: 2025" min="2000" max="2100" value="{{ request.GET.anio }}">
+                    </div>
+                    <div class="col-sm-6 col-md-2">
+                        <label for="estado" class="form-label fw-semibold">Estado</label>
+                        <select id="estado" name="estado" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="por_aprobar" {% if estado_filtro == 'por_aprobar' %}selected{% endif %}>Por Aprobar</option>
+                            <option value="aprobado" {% if estado_filtro == 'aprobado' %}selected{% endif %}>Aprobado</option>
+                            <option value="rechazado" {% if estado_filtro == 'rechazado' %}selected{% endif %}>Rechazado</option>
+                        </select>
                     </div>
                     <div class="col-sm-6 col-md-2">
                         <label for="page_size" class="form-label fw-semibold">Mostrar</label>
@@ -218,13 +227,34 @@
                                             </div>
                                         </div>
                                         {% if calificacion.justificacion_resultado %}
-                                        <div class="row">
+                                        <div class="row mb-3">
                                             <div class="col-12">
                                                 <h6 class="fw-bold text-info border-bottom pb-2 mb-3">
                                                     <i class="bi bi-chat-left-text"></i> Justificación/Observaciones
                                                 </h6>
                                                 <div class="bg-light p-3 rounded">
                                                     <p class="mb-0 text-muted">{{ calificacion.justificacion_resultado }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if calificacion.observacion_jefe %}
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <h6 class="fw-bold border-bottom pb-2 mb-3" 
+                                                    style="color: {% if calificacion.estado_calificacion == 'aprobado' %}#28a745{% else %}#dc3545{% endif %};">
+                                                    <i class="bi bi-person-badge"></i> Observaciones del Jefe de Equipo
+                                                </h6>
+                                                <div class="p-3 rounded" 
+                                                     style="background-color: {% if calificacion.estado_calificacion == 'aprobado' %}#d4edda{% else %}#f8d7da{% endif %}; 
+                                                            border-left: 4px solid {% if calificacion.estado_calificacion == 'aprobado' %}#28a745{% else %}#dc3545{% endif %};">
+                                                    <p class="mb-2"><strong>Jefe Revisor:</strong> {{ calificacion.jefe_revisor }}</p>
+                                                    <p class="mb-2"><strong>Fecha de Revisión:</strong> {{ calificacion.fecha_revision|date:"d/m/Y H:i:s" }}</p>
+                                                    <p class="mb-0"><strong>Observaciones:</strong></p>
+                                                    <p class="mb-0" style="color: {% if calificacion.estado_calificacion == 'aprobado' %}#155724{% else %}#721c24{% endif %};">
+                                                        {{ calificacion.observacion_jefe }}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>

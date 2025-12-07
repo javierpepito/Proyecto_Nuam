@@ -656,13 +656,14 @@ def tus_calificaciones(request):
     rut = request.GET.get('rut', '').strip()
     nombre_empresa = request.GET.get('nombre_empresa', '').strip()
     anio = request.GET.get('anio', '').strip()
+    estado = request.GET.get('estado', '').strip()  # Nuevo filtro por estado
     page_size = int(request.GET.get('page_size', 10))
     
-    # Filtrar calificaciones
+    # Filtrar calificaciones - ahora incluye por_aprobar, aprobado y rechazado
     calificaciones_qs = CalificacionTributaria.objects.filter(
         cuenta_id=cuenta,
-        estado_calificacion='por_aprobar'
-    ).select_related('rut_empresa').order_by('-fecha_calculo')
+        estado_calificacion__in=['por_aprobar', 'aprobado', 'rechazado']
+    ).select_related('rut_empresa').prefetch_related('aprobacion', 'rechazo').order_by('-fecha_calculo')
     
     if rut:
         calificaciones_qs = calificaciones_qs.filter(rut_empresa__empresa_rut__icontains=rut)
@@ -672,6 +673,10 @@ def tus_calificaciones(request):
     
     if anio:
         calificaciones_qs = calificaciones_qs.filter(anio_tributario=anio)
+    
+    # Filtrar por estado si se proporciona
+    if estado:
+        calificaciones_qs = calificaciones_qs.filter(estado_calificacion=estado)
     
     # Paginación
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -685,12 +690,32 @@ def tus_calificaciones(request):
     except EmptyPage:
         calificaciones = paginator.page(paginator.num_pages)
     
+    # Agregar observaciones a cada calificación
+    for calificacion in calificaciones:
+        calificacion.observacion_jefe = None
+        calificacion.fecha_revision = None
+        calificacion.jefe_revisor = None
+        
+        if calificacion.estado_calificacion == 'aprobado':
+            aprobacion = calificacion.aprobacion.first()
+            if aprobacion:
+                calificacion.observacion_jefe = aprobacion.observaciones
+                calificacion.fecha_revision = aprobacion.fecha_aprovacion
+                calificacion.jefe_revisor = aprobacion.jefe_rut
+        elif calificacion.estado_calificacion == 'rechazado':
+            rechazo = calificacion.rechazo.first()
+            if rechazo:
+                calificacion.observacion_jefe = rechazo.observaciones
+                calificacion.fecha_revision = rechazo.fecha_rechazo
+                calificacion.jefe_revisor = rechazo.jefe_rut
+    
     context = {
         'calificaciones': calificaciones,
         'total_calificaciones': paginator.count,
         'page_obj': calificaciones,
         'paginator': paginator,
         'page_size': page_size,
+        'estado_filtro': estado,  # Para mantener el filtro activo
     }
     
     return render(request, 'Contenedor_Calificaciones/calificador_tributario/tus_calificaciones.html', context)
