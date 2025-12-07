@@ -91,15 +91,32 @@ class EquipoCalificadorInline(admin.TabularInline):
 	extra = 0
 	verbose_name = "Miembro del equipo"
 	verbose_name_plural = "Miembros del equipo"
-	can_delete = False
-	show_change_link = False
-	# No mostrar botón de agregar
+	can_delete = True
+	show_change_link = True
+	# Permitir agregar calificadores
 	def has_add_permission(self, request, obj=None):
-		return True  # Si quieres ocultar el botón de agregar, pon False
+		return True
 	def has_change_permission(self, request, obj=None):
 		return True
 	def has_delete_permission(self, request, obj=None):
-		return False
+		return True
+
+	# Eliminar filtro restrictivo en formfield_for_foreignkey para mostrar todos los calificadores disponibles
+	def formfield_for_foreignkey(self, db_field, request, **kwargs):
+		if db_field.name == 'calificador':
+			from .models import CalificadorTributario, Cuenta
+			qs = CalificadorTributario.objects.all().order_by('rut')
+			kwargs['queryset'] = qs
+			from django import forms
+			class NombreCalificadorChoiceField(forms.ModelChoiceField):
+				def label_from_instance(self, obj):
+					cuenta = Cuenta.objects.filter(rut=obj.rut).first()
+					if cuenta:
+						nombre = f"{cuenta.nombre} {cuenta.apellido}".strip()
+						return nombre if nombre else obj.rut
+					return obj.rut
+			kwargs['form_class'] = NombreCalificadorChoiceField
+		return super().formfield_for_foreignkey(db_field, request, **kwargs)
 	class Media:
 		css = {
 			'all': ('Contenedor_Calificaciones/admin/hide_inline_icons.css',)
