@@ -14,18 +14,18 @@
                     <a class="btn btn-outline-light mx-2" href="{% url 'calificaciones_aprobadas_jefe' %}">Calificaciones Aprobadas</a>
                     <a class="btn btn-outline-light mx-2" href="{% url 'calificaciones_rechazadas_jefe' %}">Calificaciones Rechazadas</a>
                     <!-- Botón hamburguesa -->
-                    <div class="dropdown"></div>
+                    <div class="dropdown">
                     <button class="btn btn-hamburger-b mx-2"
-                            id="dropdownMenuButtonCalificador"
+                            id="dropdownMenuButtonJefe"
                             data-bs-toggle="dropdown"
                             aria-expanded="false"
                             aria-label="Menú de usuario">
                         <i class="bi bi-list" aria-hidden="true"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButtonCalificador">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButtonJefe">
                         <li><a class="dropdown-item" href="{% url 'perfil_jefe' %}"><i class="bi bi-person-circle me-2"></i> Perfil</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión</a></li>
+                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalCerrarSesion"><i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión</a></li>
                     </ul>
                     </div>
                 {% else %}
@@ -79,4 +79,104 @@
             ©copyright 4Fantasticos. Todos los derechos reservados - 4Fantasticos
         </div>
     </footer>
+
+    <!-- Modal de confirmación de cierre de sesión -->
+<div class="modal fade" id="modalCerrarSesion" tabindex="-1" aria-labelledby="modalCerrarSesionLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            
+            <!-- Header con gradiente -->
+            <div class="modal-header text-white position-relative" style="background: linear-gradient(135deg, #ff7043 0%, #f5732c 100%); border: none; padding: 24px;">
+                <div class="w-100 text-center">
+                    <div class="mb-2">
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 3.5rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));"></i>
+                    </div>
+                    <h4 class="modal-title fw-bold mb-0" id="modalCerrarSesionLabel">
+                        ¿Cerrar Sesión?
+                    </h4>
+                </div>
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></button>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body text-center py-5 px-4">
+                <div class="mb-4">
+                    <i class="bi bi-box-arrow-right" style="font-size: 4rem; color: #ff7043; opacity: 0.3;"></i>
+                </div>
+                <h5 class="mb-3 fw-bold text-dark">Estás a punto de cerrar tu sesión</h5>
+                <p class="text-muted mb-4" style="font-size: 1.05rem;">
+                    Deberás iniciar sesión nuevamente para acceder al sistema. <br>
+                    <small class="d-block mt-2" style="font-size: 0.9rem;">¿Deseas continuar?</small>
+                </p>
+                
+                <!-- Información adicional -->
+                <div class="alert alert-warning border-0 d-flex align-items-center justify-content-center gap-2" style="background: rgba(255, 193, 7, 0.1); border-radius: 12px;">
+                    <i class="bi bi-info-circle-fill text-warning"></i>
+                    <small class="mb-0 text-dark">Cualquier trabajo no guardado se perderá</small>
+                </div>
+            </div>
+
+            <!-- Footer con botones -->
+            <div class="modal-footer border-0 justify-content-center pb-4 pt-0 px-4">
+                <button type="button" class="btn btn-lg px-4 py-2" data-bs-dismiss="modal" style="background: #6c757d; color: white; border-radius: 12px; font-weight: 600; min-width: 140px; transition: all 0.3s ease;">
+                    <i class="bi bi-x-circle me-2"></i> Cancelar
+                </button>
+                <a href="{% url 'logout' %}" class="btn btn-lg px-4 py-2" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border: none; border-radius: 12px; font-weight: 600; min-width: 140px; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3); transition: all 0.3s ease;">
+                    <i class="bi bi-box-arrow-right me-2"></i> Sí, Salir
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+/* Animaciones para el modal */
+#modalCerrarSesion .modal-content {
+    animation: modal-slide-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modal-slide-in {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Hover de botón Cancelar */
+#modalCerrarSesion .modal-footer .btn:first-of-type:hover {
+    background: #5a6268 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+}
+
+/* Hover de botón Cerrar Sesión */
+#modalCerrarSesion .modal-footer a.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.5) !important;
+}
+
+/* Fondo oscuro (backdrop) */
+#modalCerrarSesion.modal {
+    backdrop-filter: blur(3px);
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    #modalCerrarSesion .modal-dialog {
+        margin: 1rem;
+    }
+    #modalCerrarSesion .modal-header i {
+        font-size: 2.5rem !important;
+    }
+    #modalCerrarSesion .modal-body i {
+        font-size: 3rem !important;
+    }
+}
+</style>
+
 {% endblock %}
