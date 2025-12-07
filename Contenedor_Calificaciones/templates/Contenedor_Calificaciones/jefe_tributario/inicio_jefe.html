@@ -150,7 +150,7 @@
     <div class="calificacion-card">
         <div class="calificacion-id">ID: {{ cal.calificacion_id }}</div>
         <div class="calificacion-info"><strong>Calificador:</strong> {{ cal.cuenta_id.nombre }} {{ cal.cuenta_id.apellido }}</div>
-        <div class="calificacion-info"><strong>RUT:</strong> {{ cal.rut_empresa }}</div>
+        <div class="calificacion-info"><strong>RUT:</strong> {{ cal.rut_empresa.empresa_rut }}</div>
         <div class="calificacion-info"><strong>Empresa:</strong> {{ cal.nombre_empresa }}</div>
         <div class="calificacion-info"><strong>Año:</strong> {{ cal.anio_tributario }}</div>
         <div class="calificacion-info"><strong>Puntaje:</strong> {{ cal.puntaje_calificacion }}</div>
