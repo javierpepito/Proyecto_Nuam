@@ -10,16 +10,29 @@ from .validators import validate_rut_chileno, formatear_rut
 from django.urls import reverse
 import json
 from django.db import transaction, connection
-
 import pandas as pd
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import os
 from django.db import IntegrityError
+from django.contrib.auth.models import Group, User
+from rest_framework import permissions, viewsets
+from .serializers import GroupSerializer, UserSerializer
 
 #Variables constantes para los roles:
 ROL_JEFE = 'Jefe De Equipo'
 ROL_CALIFICADOR = 'Calificador Tributario'
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by("-date_joined")
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    queryset = Group.objects.all().order_by("name")
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 # Vista de perfil para calificador tributario
 def perfil_calificador(request):
