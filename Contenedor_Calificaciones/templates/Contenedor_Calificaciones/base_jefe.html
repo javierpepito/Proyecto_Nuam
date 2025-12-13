@@ -5,28 +5,38 @@
     <nav class="navbar border-bottom border-body navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand m-2" href="{% url 'Inicio_Jefe' %}">
-                <img src="{% static 'Contenedor_Calificaciones/images/logoNuam.png' %}" width="190px" height="50px">
+                <img src="{% static 'Contenedor_Calificaciones/images/logoNuam.png' %}" width="190px" height="50px" alt="Logo Nuam">
             </a>
             <div class="d-flex align-items-center">
                 {% if request.session.cuenta_id %}
-                    <a class="btn btn-outline-light mx-2" href="{% url 'tu_equipo' %}">Tu Equipo</a>
-                    <a class="btn btn-outline-light mx-2" href="{% url 'calificaciones_pendientes_jefe' %}">Calificaciones Por Aprobar</a>
-                    <a class="btn btn-outline-light mx-2" href="{% url 'calificaciones_aprobadas_jefe' %}">Calificaciones Aprobadas</a>
-                    <a class="btn btn-outline-light mx-2" href="{% url 'calificaciones_rechazadas_jefe' %}">Calificaciones Rechazadas</a>
-                    <!-- Botón hamburguesa -->
+                    <!-- Botones visibles solo en pantallas grandes -->
+                    <a class="btn btn-outline-light mx-2 d-none d-lg-inline-block" href="{% url 'tu_equipo' %}">Tu Equipo</a>
+                    <a class="btn btn-outline-light mx-2 d-none d-lg-inline-block" href="{% url 'calificaciones_pendientes_jefe' %}">Calificaciones Por Aprobar</a>
+                    <a class="btn btn-outline-light mx-2 d-none d-lg-inline-block" href="{% url 'calificaciones_aprobadas_jefe' %}">Calificaciones Aprobadas</a>
+                    <a class="btn btn-outline-light mx-2 d-none d-lg-inline-block" href="{% url 'calificaciones_rechazadas_jefe' %}">Calificaciones Rechazadas</a>
+                    
+                    <!-- Botón hamburguesa con todo el menú -->
                     <div class="dropdown">
-                    <button class="btn btn-hamburger-b mx-2"
-                            id="dropdownMenuButtonJefe"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false"
-                            aria-label="Menú de usuario">
-                        <i class="bi bi-list" aria-hidden="true"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButtonJefe">
-                        <li><a class="dropdown-item" href="{% url 'perfil_jefe' %}"><i class="bi bi-person-circle me-2"></i> Perfil</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalCerrarSesion"><i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión</a></li>
-                    </ul>
+                        <button class="btn btn-hamburger-b mx-2"
+                                id="dropdownMenuButtonJefe"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                aria-label="Menú de usuario">
+                            <i class="bi bi-list" aria-hidden="true"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButtonJefe">
+                            <!-- Enlaces de navegación solo visibles en móvil -->
+                            <li class="d-lg-none"><a class="dropdown-item" href="{% url 'tu_equipo' %}"><i class="bi bi-people me-2"></i> Tu Equipo</a></li>
+                            <li class="d-lg-none"><a class="dropdown-item" href="{% url 'calificaciones_pendientes_jefe' %}"><i class="bi bi-hourglass-split me-2"></i> Calificaciones Por Aprobar</a></li>
+                            <li class="d-lg-none"><a class="dropdown-item" href="{% url 'calificaciones_aprobadas_jefe' %}"><i class="bi bi-check-circle me-2"></i> Calificaciones Aprobadas</a></li>
+                            <li class="d-lg-none"><a class="dropdown-item" href="{% url 'calificaciones_rechazadas_jefe' %}"><i class="bi bi-x-circle me-2"></i> Calificaciones Rechazadas</a></li>
+                            <li class="d-lg-none"><hr class="dropdown-divider"></li>
+                            
+                            <!-- Opciones de usuario siempre visibles -->
+                            <li><a class="dropdown-item" href="{% url 'perfil_jefe' %}"><i class="bi bi-person-circle me-2"></i> Perfil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#modalCerrarSesion"><i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión</a></li>
+                        </ul>
                     </div>
                 {% else %}
                     <a class="btn btn-outline-light mx-2" href="{% url 'identificacion' %}">Identificación</a>

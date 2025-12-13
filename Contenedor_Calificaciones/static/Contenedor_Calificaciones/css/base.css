@@ -696,3 +696,67 @@ a[href*="logout"].dropdown-item:hover {
     background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !  important;
     color: #fff ! important;
 }
+
+/* ========================================
+   NAVBAR RESPONSIVO - MÓVIL
+   ======================================== */
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 991px) {
+    /* Logo más pequeño en móvil */
+    .navbar-brand img {
+        width: 150px !important;
+        height: 40px !important;
+    }
+
+    /* Dropdown menu en móvil - más ancho y mejor posicionado */
+    .dropdown-menu {
+        min-width: 280px !important;
+        max-width: 90vw !important;
+    }
+
+    /* Items del dropdown más grandes en móvil */
+    .dropdown-item {
+        padding: 14px 18px !important;
+        font-size: 1rem !important;
+    }
+
+    .dropdown-item i {
+        font-size: 1.2rem !important;
+    }
+}
+
+/* Estilos para tablets */
+@media (min-width: 768px) and (max-width: 991px) {
+    .navbar-brand img {
+        width: 170px !important;
+        height: 45px !important;
+    }
+}
+
+/* Ajuste para evitar overflow horizontal en móvil */
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .navbar-brand {
+        margin: 0.5rem !important;
+    }
+
+    .navbar-brand img {
+        width: 130px !important;
+        height: 35px !important;
+    }
+
+    /* Botón hamburguesa más pequeño en móvil */
+    .btn-hamburger-b {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    .btn-hamburger-b .bi {
+        font-size: 1.2rem !important;
+    }
+}

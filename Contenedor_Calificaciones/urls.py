@@ -3,14 +3,29 @@ from . import views
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+# Router para DRF
 router = routers.DefaultRouter()
-router.register(r"users", views.UserViewSet)
-router.register(r"groups", views.GroupViewSet)
+router.register(r"cuentas", views.CuentaViewSet, basename='cuenta')
+router.register(r"equipos", views.EquipoDeTrabajoViewSet, basename='equipo')
+router.register(r"empresas", views.EmpresaViewSet, basename='empresa')
+router.register(r"calificaciones", views.CalificacionTributariaViewSet, basename='calificacion')
+router.register(r"calificaciones-aprobadas", views.CalificacionAprovadaViewSet, basename='calificacion-aprobada')
+router.register(r"calificaciones-rechazadas", views.CalificacionRechazadaViewSet, basename='calificacion-rechazada')
 
 urlpatterns = [
     path("", views.identificacion_view, name="identificacion"),  # Home: ingreso de RUT
+    
+    # API REST
     path("api/", include(router.urls)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    path("api/login/", views.LoginAPIView.as_view(), name="api-login"),
+    path("api/estadisticas/", views.EstadisticasAPIView.as_view(), name="api-estadisticas"),
+    
+    # JWT Tokens
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
+    # Vistas web
     path("login/", views.login_view, name="login"),
     path("registro/", views.registro_view, name="registro"),
     path("inicio_calificador/", views.Inicio_Calificador, name="Inicio_Calificador"),
@@ -36,6 +51,4 @@ urlpatterns = [
     path("jefe/calificaciones/rechazar/<int:calificacion_id>/", views.rechazar_calificacion, name="rechazar_calificacion"),
     path("jefe/perfil/", views.perfil_jefe, name="perfil_jefe"),
     path("calificador/perfil/", views.perfil_calificador, name="perfil_calificador"),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

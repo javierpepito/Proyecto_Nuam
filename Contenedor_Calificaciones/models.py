@@ -310,11 +310,6 @@ class Empresa(models.Model):
 
 
 #Modelo de Calificaciones Tributarias
-from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.utils import timezone
-
-
 class CalificacionTributaria(models.Model):
     # Choices para campos con opciones limitadas
     CATEGORIA_CHOICES = [
