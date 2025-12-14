@@ -29,14 +29,49 @@ SECRET_KEY = 'django-insecure-tbhmc*d1n6b9u#syv*d*%f=@kw5$34ya7p&@sr(d$iqg2ps9m*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['app-nuam-bf1dd339e878.herokuapp.com', '127.0.0.1']
+ALLOWED_HOSTS = ['app-nuam-bf1dd339e878.herokuapp.com', '127.0.0.1', 'localhost']
 
+
+
+CORS_ALLOW_CREDENTIALS = False  
+CORS_ALLOW_ALL_ORIGINS = False
+
+# Origenes para frontend web (si lo tienes)
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
+    "http://localhost:8000",
     "https://app-nuam-bf1dd339e878.herokuapp.com",
 ]
 
-# Application definition
+# Permite métodos necesarios para la API REST
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Headers necesarios para JWT y apps móviles
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',  # Para JWT Bearer tokens
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# CRÍTICO: Permite peticiones sin origin (apps móviles)
+# Las apps móviles envían origin: null o no envían origin
+CORS_ORIGIN_ALLOW_ALL = True  # Necesario para apps móviles
+
+# La seguridad está en JWT, no en CORS
+# El JWT valida que sea un usuario legítimo
 
 INSTALLED_APPS = [
     'django.contrib.admin',
