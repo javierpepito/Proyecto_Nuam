@@ -3,25 +3,40 @@ from . import views
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-# Router para DRF
+# Router para DRF (opcional, no se usa en la app móvil simplificada)
 router = routers.DefaultRouter()
-router.register(r"cuentas", views.CuentaViewSet, basename='cuenta')
-router.register(r"equipos", views.EquipoDeTrabajoViewSet, basename='equipo')
-router.register(r"empresas", views.EmpresaViewSet, basename='empresa')
-router.register(r"calificaciones", views.CalificacionTributariaViewSet, basename='calificacion')
-router.register(r"calificaciones-aprobadas", views.CalificacionAprovadaViewSet, basename='calificacion-aprobada')
-router.register(r"calificaciones-rechazadas", views.CalificacionRechazadaViewSet, basename='calificacion-rechazada')
 
 urlpatterns = [
     path("", views.identificacion_view, name="identificacion"),  # Home: ingreso de RUT
     
-    # API REST
-    path("api/", include(router.urls)),
-    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
-    path("api/login/", views.LoginAPIView.as_view(), name="api-login"),
-    path("api/estadisticas/", views.EstadisticasAPIView.as_view(), name="api-estadisticas"),
+    # ========================================
+    # API REST PARA APP MÓVIL DEL JEFE
+    # ========================================
     
-    # JWT Tokens
+    # Autenticación
+    path("api/login/", views.LoginAPIView.as_view(), name="api-login"),
+    
+    # Dashboard principal
+    path("api/dashboard/", views.DashboardAPIView.as_view(), name="api-dashboard"),
+    
+    # Calificaciones pendientes (por aprobar)
+    path("api/calificaciones-pendientes/", views.CalificacionesPendientesAPIView.as_view(), name="api-calificaciones-pendientes"),
+    path("api/calificacion/<int:calificacion_id>/", views.CalificacionDetalleAPIView.as_view(), name="api-calificacion-detalle"),
+    
+    # Acciones: Aprobar/Rechazar
+    path("api/aprobar-calificacion/", views.AprobarCalificacionAPIView.as_view(), name="api-aprobar-calificacion"),
+    path("api/rechazar-calificacion/", views.RechazarCalificacionAPIView.as_view(), name="api-rechazar-calificacion"),
+    
+    # Historial (aprobadas y rechazadas)
+    path("api/historial/", views.HistorialCalificacionesAPIView.as_view(), name="api-historial"),
+    
+    # Equipo del jefe
+    path("api/mi-equipo/", views.MiEquipoAPIView.as_view(), name="api-mi-equipo"),
+    
+    # Perfil del jefe
+    path("api/perfil/", views.PerfilJefeAPIView.as_view(), name="api-perfil"),
+    
+    # JWT Tokens (opcional para autenticación avanzada)
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     

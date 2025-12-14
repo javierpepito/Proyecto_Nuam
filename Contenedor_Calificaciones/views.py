@@ -23,13 +23,10 @@ from rest_framework.views import APIView
 from django.db.models import Q, Count
 from datetime import datetime, timedelta
 from .serializers import (
-    LoginSerializer, CuentaSerializer, CuentaLightSerializer,
-    CalificadorTributarioSerializer, JefeEquipoSerializer,
-    EquipoDeTrabajoSerializer, EquipoCalificadorSerializer,
-    EmpresaSerializer, CalificacionTributariaSerializer,
-    CalificacionTributariaLightSerializer, CalificacionAprovadaSerializer,
-    CalificacionRechazadaSerializer, EstadisticasEquipoSerializer,
-    EstadisticasCalificadorSerializer
+    LoginJefeSerializer, PerfilJefeSerializer,
+    MiembroEquipoSerializer, CalificacionPendienteSerializer,
+    CalificacionHistorialSerializer, DashboardSerializer,
+    AccionCalificacionSerializer
 )
 
 #Variables constantes para los roles:
@@ -1382,293 +1379,128 @@ def guardar_calificaciones_masivas(request):
 
 
 # ========================================
-# API REST VIEWS PARA LA APP MÓVIL
+# API REST VIEWS PARA LA APP MÓVIL DEL JEFE
 # ========================================
 
 class LoginAPIView(APIView):
     """
-    Vista de API para login - No requiere autenticación
+    Login exclusivo para Jefe de Equipo
     POST: /api/login/
     Body: {"rut": "12345678-9", "contrasena": "Password123!"}
     """
-    permission_classes = []  # Sin autenticación requerida
+    permission_classes = []
     
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
+        serializer = LoginJefeSerializer(data=request.data)
         if serializer.is_valid():
             return Response({
                 'success': True,
-                'message': 'Login exitoso',
-                'data': serializer.validated_data
+                'message': 'Bienvenido',
+                'user': serializer.validated_data
             }, status=status.HTTP_200_OK)
         return Response({
             'success': False,
-            'message': 'Credenciales inválidas',
+            'message': 'Credenciales inválidas o acceso no autorizado',
             'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        }, status=status.HTTP_401_UNAUTHORIZED)
 
 
-class CuentaViewSet(viewsets.ReadOnlyModelViewSet):
+class PerfilJefeAPIView(APIView):
     """
-    ViewSet para Cuentas - Solo lectura
-    GET: /api/cuentas/ - Lista de cuentas
-    GET: /api/cuentas/{id}/ - Detalle de cuenta
+    Perfil del Jefe autenticado
+    GET: /api/perfil/?rut=12345678-9
+    PUT: /api/perfil/ - Actualizar datos (telefono, correo, dirección)
     """
-    queryset = Cuenta.objects.all()
-    permission_classes = []  # Cambiar a [permissions.IsAuthenticated] en producción
+    permission_classes = []
     
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return CuentaLightSerializer
-        return CuentaSerializer
-    
-    @action(detail=False, methods=['get'])
-    def perfil(self, request):
-        """
-        Obtener perfil del usuario autenticado
-        GET: /api/cuentas/perfil/?rut=12345678-9
-        """
+    def get(self, request):
         rut = request.query_params.get('rut')
         if not rut:
             return Response({'error': 'RUT es requerido'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            cuenta = Cuenta.objects.get(rut=formatear_rut(rut))
-            serializer = CuentaSerializer(cuenta)
+            cuenta = Cuenta.objects.get(rut=formatear_rut(rut), rol=ROL_JEFE)
+            serializer = PerfilJefeSerializer(cuenta)
             return Response(serializer.data)
         except Cuenta.DoesNotExist:
-            return Response({'error': 'Cuenta no encontrada'}, status=status.HTTP_404_NOT_FOUND)
-
-
-class EquipoDeTrabajoViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ViewSet para Equipos de Trabajo
-    GET: /api/equipos/ - Lista de equipos
-    GET: /api/equipos/{id}/ - Detalle de equipo con miembros
-    """
-    queryset = EquipoDeTrabajo.objects.all()
-    serializer_class = EquipoDeTrabajoSerializer
-    permission_classes = []  # Cambiar en producción
+            return Response({'error': 'Jefe no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     
-    @action(detail=False, methods=['get'])
-    def por_jefe(self, request):
-        """
-        Obtener equipo del jefe
-        GET: /api/equipos/por_jefe/?rut_jefe=12345678-9
-        """
+    def put(self, request):
+        rut = request.data.get('rut')
+        if not rut:
+            return Response({'error': 'RUT es requerido'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            cuenta = Cuenta.objects.get(rut=formatear_rut(rut), rol=ROL_JEFE)
+            serializer = PerfilJefeSerializer(cuenta, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({
+                    'success': True,
+                    'message': 'Perfil actualizado correctamente',
+                    'data': serializer.data
+                })
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Cuenta.DoesNotExist:
+            return Response({'error': 'Jefe no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class MiEquipoAPIView(APIView):
+    """
+    Ver miembros del equipo del jefe con estadísticas
+    GET: /api/mi-equipo/?rut_jefe=12345678-9
+    """
+    permission_classes = []
+    
+    def get(self, request):
         rut_jefe = request.query_params.get('rut_jefe')
         if not rut_jefe:
             return Response({'error': 'rut_jefe es requerido'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            equipo = EquipoDeTrabajo.objects.get(jefe_equipo_rut__rut=formatear_rut(rut_jefe))
-            serializer = EquipoDeTrabajoSerializer(equipo)
-            return Response(serializer.data)
-        except EquipoDeTrabajo.DoesNotExist:
-            return Response({'error': 'Equipo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
-
-
-class EmpresaViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ViewSet para Empresas
-    GET: /api/empresas/ - Lista de empresas
-    GET: /api/empresas/{rut}/ - Detalle de empresa
-    """
-    queryset = Empresa.objects.all()
-    serializer_class = EmpresaSerializer
-    permission_classes = []
-    lookup_field = 'empresa_rut'
-    
-    def get_queryset(self):
-        queryset = Empresa.objects.all()
-        # Filtros opcionales
-        pais = self.request.query_params.get('pais')
-        if pais:
-            queryset = queryset.filter(pais=pais)
-        return queryset.order_by('-fecha_ingreso')
-
-
-class CalificacionTributariaViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ViewSet para Calificaciones Tributarias
-    GET: /api/calificaciones/ - Lista de calificaciones
-    GET: /api/calificaciones/{id}/ - Detalle de calificación
-    """
-    queryset = CalificacionTributaria.objects.all()
-    permission_classes = []
-    
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return CalificacionTributariaLightSerializer
-        return CalificacionTributariaSerializer
-    
-    def get_queryset(self):
-        queryset = CalificacionTributaria.objects.select_related(
-            'cuenta_id', 'rut_empresa'
-        ).all()
-        
-        # Filtros
-        estado = self.request.query_params.get('estado')
-        cuenta_id = self.request.query_params.get('cuenta_id')
-        equipo_id = self.request.query_params.get('equipo_id')
-        anio = self.request.query_params.get('anio')
-        
-        if estado:
-            queryset = queryset.filter(estado_calificacion=estado)
-        if cuenta_id:
-            queryset = queryset.filter(cuenta_id=cuenta_id)
-        if equipo_id:
-            cuentas_equipo = Cuenta.objects.filter(equipo_trabajo_id=equipo_id)
-            queryset = queryset.filter(cuenta_id__in=cuentas_equipo)
-        if anio:
-            queryset = queryset.filter(anio_tributario=anio)
-        
-        return queryset.order_by('-fecha_calculo')
-    
-    @action(detail=False, methods=['get'])
-    def por_aprobar(self, request):
-        """
-        Calificaciones pendientes de aprobación de un equipo
-        GET: /api/calificaciones/por_aprobar/?equipo_id=1
-        """
-        equipo_id = request.query_params.get('equipo_id')
-        if not equipo_id:
-            return Response({'error': 'equipo_id es requerido'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        cuentas_equipo = Cuenta.objects.filter(equipo_trabajo_id=equipo_id, rol=ROL_CALIFICADOR)
-        calificaciones = CalificacionTributaria.objects.filter(
-            cuenta_id__in=cuentas_equipo,
-            estado_calificacion='por_aprobar'
-        ).select_related('cuenta_id', 'rut_empresa').order_by('-fecha_calculo')
-        
-        serializer = CalificacionTributariaLightSerializer(calificaciones, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'])
-    def aprobar(self, request, pk=None):
-        """
-        Aprobar una calificación
-        POST: /api/calificaciones/{id}/aprobar/
-        Body: {"jefe_rut": "12345678-9", "observaciones": "Aprobado"}
-        """
-        calificacion = self.get_object()
-        jefe_rut = request.data.get('jefe_rut')
-        observaciones = request.data.get('observaciones', '')
-        
-        if not jefe_rut:
-            return Response({'error': 'jefe_rut es requerido'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            jefe = Cuenta.objects.get(rut=formatear_rut(jefe_rut), rol=ROL_JEFE)
+            jefe = Cuenta.objects.get(rut=formatear_rut(rut_jefe), rol=ROL_JEFE)
+            equipo = jefe.equipo_trabajo
             
-            with transaction.atomic():
-                # Cambiar estado
-                calificacion.estado_calificacion = 'aprobado'
-                calificacion.save()
-                
-                # Crear registro de aprobación
-                CalificacionAprovada.objects.create(
-                    calificacion=calificacion,
-                    jefe=jefe,
-                    observaciones=observaciones
-                )
+            if not equipo:
+                return Response({'error': 'Jefe sin equipo asignado'}, status=status.HTTP_404_NOT_FOUND)
             
+            # Obtener calificadores del equipo
+            miembros_equipo = EquipoCalificador.objects.filter(equipo=equipo).select_related('calificador')
+            miembros_data = []
+            
+            for miembro in miembros_equipo:
+                try:
+                    cuenta = Cuenta.objects.get(rut=miembro.calificador.rut)
+                    calificaciones_calificador = CalificacionTributaria.objects.filter(cuenta_id=cuenta)
+                    
+                    miembros_data.append({
+                        'rut': cuenta.rut,
+                        'nombre_completo': f"{cuenta.nombre} {cuenta.apellido}",
+                        'correo': cuenta.correo,
+                        'telefono': cuenta.telefono if cuenta.telefono else '',
+                        'total_calificaciones': calificaciones_calificador.count(),
+                        'calificaciones_aprobadas': calificaciones_calificador.filter(estado_calificacion='aprobado').count(),
+                        'calificaciones_rechazadas': calificaciones_calificador.filter(estado_calificacion='rechazado').count(),
+                        'calificaciones_pendientes': calificaciones_calificador.filter(estado_calificacion='por_aprobar').count(),
+                    })
+                except Cuenta.DoesNotExist:
+                    continue
+            
+            serializer = MiembroEquipoSerializer(miembros_data, many=True)
             return Response({
-                'success': True,
-                'message': 'Calificación aprobada exitosamente'
-            }, status=status.HTTP_200_OK)
+                'equipo_nombre': equipo.nombre_equipo,
+                'total_miembros': len(miembros_data),
+                'miembros': serializer.data
+            })
         
         except Cuenta.DoesNotExist:
             return Response({'error': 'Jefe no encontrado'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-    
-    @action(detail=True, methods=['post'])
-    def rechazar(self, request, pk=None):
-        """
-        Rechazar una calificación
-        POST: /api/calificaciones/{id}/rechazar/
-        Body: {"jefe_rut": "12345678-9", "observaciones": "Datos incorrectos"}
-        """
-        calificacion = self.get_object()
-        jefe_rut = request.data.get('jefe_rut')
-        observaciones = request.data.get('observaciones', '')
-        
-        if not jefe_rut:
-            return Response({'error': 'jefe_rut es requerido'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            jefe = Cuenta.objects.get(rut=formatear_rut(jefe_rut), rol=ROL_JEFE)
-            
-            with transaction.atomic():
-                # Cambiar estado
-                calificacion.estado_calificacion = 'rechazado'
-                calificacion.save()
-                
-                # Crear registro de rechazo
-                CalificacionRechazada.objects.create(
-                    calificacion=calificacion,
-                    jefe=jefe,
-                    observaciones=observaciones
-                )
-            
-            return Response({
-                'success': True,
-                'message': 'Calificación rechazada exitosamente'
-            }, status=status.HTTP_200_OK)
-        
-        except Cuenta.DoesNotExist:
-            return Response({'error': 'Jefe no encontrado'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CalificacionAprovadaViewSet(viewsets.ReadOnlyModelViewSet):
+class CalificacionesPendientesAPIView(APIView):
     """
-    ViewSet para Calificaciones Aprobadas
-    GET: /api/calificaciones-aprobadas/ - Lista de aprobadas
-    """
-    queryset = CalificacionAprovada.objects.all()
-    serializer_class = CalificacionAprovadaSerializer
-    permission_classes = []
-    
-    def get_queryset(self):
-        queryset = CalificacionAprovada.objects.select_related(
-            'calificacion', 'jefe'
-        ).all()
-        
-        jefe_rut = self.request.query_params.get('jefe_rut')
-        if jefe_rut:
-            queryset = queryset.filter(jefe_rut=formatear_rut(jefe_rut))
-        
-        return queryset.order_by('-fecha_aprovacion')
-
-
-class CalificacionRechazadaViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ViewSet para Calificaciones Rechazadas
-    GET: /api/calificaciones-rechazadas/ - Lista de rechazadas
-    """
-    queryset = CalificacionRechazada.objects.all()
-    serializer_class = CalificacionRechazadaSerializer
-    permission_classes = []
-    
-    def get_queryset(self):
-        queryset = CalificacionRechazada.objects.select_related(
-            'calificacion', 'jefe'
-        ).all()
-        
-        jefe_rut = self.request.query_params.get('jefe_rut')
-        if jefe_rut:
-            queryset = queryset.filter(jefe_rut=formatear_rut(jefe_rut))
-        
-        return queryset.order_by('-fecha_rechazo')
-
-
-class EstadisticasAPIView(APIView):
-    """
-    Vista para obtener estadísticas del equipo
-    GET: /api/estadisticas/?equipo_id=1
+    Calificaciones pendientes por aprobar
+    GET: /api/calificaciones-pendientes/?equipo_id=1
     """
     permission_classes = []
     
@@ -1681,49 +1513,324 @@ class EstadisticasAPIView(APIView):
             equipo = EquipoDeTrabajo.objects.get(equipo_id=equipo_id)
             cuentas_equipo = Cuenta.objects.filter(equipo_trabajo=equipo, rol=ROL_CALIFICADOR)
             
-            # Estadísticas generales
-            calificaciones = CalificacionTributaria.objects.filter(cuenta_id__in=cuentas_equipo)
+            calificaciones = CalificacionTributaria.objects.filter(
+                cuenta_id__in=cuentas_equipo,
+                estado_calificacion='por_aprobar'
+            ).select_related('cuenta_id', 'rut_empresa').order_by('-fecha_calculo')
             
-            total_calificaciones = calificaciones.count()
-            pendientes = calificaciones.filter(estado_calificacion='por_enviar').count()
-            por_aprobar = calificaciones.filter(estado_calificacion='por_aprobar').count()
-            aprobadas = calificaciones.filter(estado_calificacion='aprobado').count()
-            rechazadas = calificaciones.filter(estado_calificacion='rechazado').count()
+            serializer = CalificacionPendienteSerializer(calificaciones, many=True)
+            return Response({
+                'total': calificaciones.count(),
+                'calificaciones': serializer.data
+            })
+        
+        except EquipoDeTrabajo.DoesNotExist:
+            return Response({'error': 'Equipo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CalificacionDetalleAPIView(APIView):
+    """
+    Detalle completo de una calificación
+    GET: /api/calificacion/{id}/
+    """
+    permission_classes = []
+    
+    def get(self, request, calificacion_id):
+        try:
+            calificacion = CalificacionTributaria.objects.select_related(
+                'cuenta_id', 'rut_empresa'
+            ).get(calificacion_id=calificacion_id)
             
-            # Empresas únicas registradas por el equipo
-            total_empresas = Empresa.objects.filter(ingresado_por__in=cuentas_equipo).distinct().count()
-            
-            # Calificaciones del mes actual
-            mes_actual = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            calificaciones_mes = calificaciones.filter(fecha_calculo__gte=mes_actual).count()
-            
-            estadisticas = {
-                'total_calificaciones': total_calificaciones,
-                'pendientes': pendientes,
-                'por_aprobar': por_aprobar,
-                'aprobadas': aprobadas,
-                'rechazadas': rechazadas,
-                'total_empresas': total_empresas,
-                'calificaciones_mes_actual': calificaciones_mes,
-            }
-            
-            # Estadísticas por calificador
-            estadisticas_calificadores = []
-            for cuenta in cuentas_equipo:
-                calif_cuenta = calificaciones.filter(cuenta_id=cuenta)
-                estadisticas_calificadores.append({
-                    'calificador_rut': cuenta.rut,
-                    'calificador_nombre': f"{cuenta.nombre} {cuenta.apellido}",
-                    'total_calificaciones': calif_cuenta.count(),
-                    'aprobadas': calif_cuenta.filter(estado_calificacion='aprobado').count(),
-                    'rechazadas': calif_cuenta.filter(estado_calificacion='rechazado').count(),
-                    'pendientes': calif_cuenta.filter(estado_calificacion='por_enviar').count(),
-                })
+            serializer = CalificacionPendienteSerializer(calificacion)
+            return Response(serializer.data)
+        
+        except CalificacionTributaria.DoesNotExist:
+            return Response({'error': 'Calificación no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class AprobarCalificacionAPIView(APIView):
+    """
+    Aprobar una calificación
+    POST: /api/aprobar-calificacion/
+    Body: {"calificacion_id": 1, "jefe_rut": "12345678-9", "observaciones": "Aprobado"}
+    """
+    permission_classes = []
+    
+    def post(self, request):
+        data = {**request.data, 'accion': 'aprobar'}
+        serializer = AccionCalificacionSerializer(data=data)
+        
+        if not serializer.is_valid():
+            return Response({
+                'success': False,
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        calificacion = serializer.validated_data['calificacion']
+        jefe = serializer.validated_data['jefe']
+        observaciones = serializer.validated_data.get('observaciones', '')
+        
+        try:
+            with transaction.atomic():
+                calificacion.estado_calificacion = 'aprobado'
+                calificacion.save()
+                
+                CalificacionAprovada.objects.create(
+                    calificacion=calificacion,
+                    jefe=jefe,
+                    observaciones=observaciones
+                )
             
             return Response({
-                'equipo': estadisticas,
-                'calificadores': estadisticas_calificadores
+                'success': True,
+                'message': 'Calificación aprobada exitosamente'
+            }, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class RechazarCalificacionAPIView(APIView):
+    """
+    Rechazar una calificación
+    POST: /api/rechazar-calificacion/
+    Body: {"calificacion_id": 1, "jefe_rut": "12345678-9", "observaciones": "Datos incorrectos"}
+    """
+    permission_classes = []
+    
+    def post(self, request):
+        data = {**request.data, 'accion': 'rechazar'}
+        serializer = AccionCalificacionSerializer(data=data)
+        
+        if not serializer.is_valid():
+            return Response({
+                'success': False,
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        calificacion = serializer.validated_data['calificacion']
+        jefe = serializer.validated_data['jefe']
+        observaciones = serializer.validated_data.get('observaciones', '')
+        
+        try:
+            with transaction.atomic():
+                calificacion.estado_calificacion = 'rechazado'
+                calificacion.save()
+                
+                CalificacionRechazada.objects.create(
+                    calificacion=calificacion,
+                    jefe=jefe,
+                    observaciones=observaciones
+                )
+            
+            return Response({
+                'success': True,
+                'message': 'Calificación rechazada exitosamente'
+            }, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class HistorialCalificacionesAPIView(APIView):
+    """
+    Historial de calificaciones aprobadas y rechazadas
+    GET: /api/historial/?equipo_id=1&estado=aprobado (o rechazado o ambos)
+    """
+    permission_classes = []
+    
+    def get(self, request):
+        equipo_id = request.query_params.get('equipo_id')
+        estado = request.query_params.get('estado', 'all')  # all, aprobado, rechazado
+        
+        if not equipo_id:
+            return Response({'error': 'equipo_id es requerido'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            equipo = EquipoDeTrabajo.objects.get(equipo_id=equipo_id)
+            cuentas_equipo = Cuenta.objects.filter(equipo_trabajo=equipo, rol=ROL_CALIFICADOR)
+            
+            historial = []
+            
+            # Aprobadas
+            if estado in ['all', 'aprobado']:
+                aprobadas = CalificacionAprovada.objects.filter(
+                    calificacion__cuenta_id__in=cuentas_equipo
+                ).select_related('calificacion__cuenta_id', 'calificacion__rut_empresa').order_by('-fecha_aprovacion')
+                
+                for apr in aprobadas:
+                    historial.append({
+                        'calificacion_id': apr.calificacion.calificacion_id,
+                        'empresa_rut': apr.calificacion.rut_empresa.empresa_rut,
+                        'empresa_nombre': apr.calificacion.rut_empresa.nombre_empresa,
+                        'empresa_pais': apr.calificacion.rut_empresa.pais,
+                        'anio_tributario': apr.calificacion.anio_tributario,
+                        'puntaje_calificacion': apr.calificacion.puntaje_calificacion,
+                        'categoria_calificacion': apr.calificacion.categoria_calificacion,
+                        'nivel_riesgo': apr.calificacion.nivel_riesgo,
+                        'estado': 'aprobado',
+                        'fecha_revision': apr.fecha_aprovacion,
+                        'observaciones': apr.observaciones,
+                        'calificador_nombre': f"{apr.calificacion.cuenta_id.nombre} {apr.calificacion.cuenta_id.apellido}"
+                    })
+            
+            # Rechazadas
+            if estado in ['all', 'rechazado']:
+                rechazadas = CalificacionRechazada.objects.filter(
+                    calificacion__cuenta_id__in=cuentas_equipo
+                ).select_related('calificacion__cuenta_id', 'calificacion__rut_empresa').order_by('-fecha_rechazo')
+                
+                for rec in rechazadas:
+                    historial.append({
+                        'calificacion_id': rec.calificacion.calificacion_id,
+                        'empresa_rut': rec.calificacion.rut_empresa.empresa_rut,
+                        'empresa_nombre': rec.calificacion.rut_empresa.nombre_empresa,
+                        'empresa_pais': rec.calificacion.rut_empresa.pais,
+                        'anio_tributario': rec.calificacion.anio_tributario,
+                        'puntaje_calificacion': rec.calificacion.puntaje_calificacion,
+                        'categoria_calificacion': rec.calificacion.categoria_calificacion,
+                        'nivel_riesgo': rec.calificacion.nivel_riesgo,
+                        'estado': 'rechazado',
+                        'fecha_revision': rec.fecha_rechazo,
+                        'observaciones': rec.observaciones,
+                        'calificador_nombre': f"{rec.calificacion.cuenta_id.nombre} {rec.calificacion.cuenta_id.apellido}"
+                    })
+            
+            # Ordenar por fecha
+            historial.sort(key=lambda x: x['fecha_revision'], reverse=True)
+            
+            serializer = CalificacionHistorialSerializer(historial, many=True)
+            return Response({
+                'total': len(historial),
+                'historial': serializer.data
             })
+        
+        except EquipoDeTrabajo.DoesNotExist:
+            return Response({'error': 'Equipo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class DashboardAPIView(APIView):
+    """
+    Dashboard principal con estadísticas completas
+    GET: /api/dashboard/?equipo_id=1
+    """
+    permission_classes = []
+    
+    def get(self, request):
+        equipo_id = request.query_params.get('equipo_id')
+        if not equipo_id:
+            return Response({'error': 'equipo_id es requerido'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            from django.db.models import Avg
+            
+            equipo = EquipoDeTrabajo.objects.get(equipo_id=equipo_id)
+            cuentas_equipo = Cuenta.objects.filter(equipo_trabajo=equipo, rol=ROL_CALIFICADOR)
+            
+            # Fechas de referencia
+            hoy = timezone.now()
+            inicio_mes = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            hace_7_dias = hoy - timedelta(days=7)
+            
+            # Calificaciones del equipo
+            todas_calificaciones = CalificacionTributaria.objects.filter(cuenta_id__in=cuentas_equipo)
+            
+            # ESTADÍSTICAS GENERALES
+            total_pendientes_aprobar = todas_calificaciones.filter(estado_calificacion='por_aprobar').count()
+            
+            # Hoy
+            total_aprobadas_hoy = CalificacionAprovada.objects.filter(
+                calificacion__cuenta_id__in=cuentas_equipo,
+                fecha_aprovacion__date=hoy.date()
+            ).count()
+            
+            total_rechazadas_hoy = CalificacionRechazada.objects.filter(
+                calificacion__cuenta_id__in=cuentas_equipo,
+                fecha_rechazo__date=hoy.date()
+            ).count()
+            
+            # Mes actual
+            total_pendientes_mes = todas_calificaciones.filter(
+                estado_calificacion='por_aprobar',
+                fecha_calculo__gte=inicio_mes
+            ).count()
+            
+            total_aprobadas_mes = CalificacionAprovada.objects.filter(
+                calificacion__cuenta_id__in=cuentas_equipo,
+                fecha_aprovacion__gte=inicio_mes
+            ).count()
+            
+            total_rechazadas_mes = CalificacionRechazada.objects.filter(
+                calificacion__cuenta_id__in=cuentas_equipo,
+                fecha_rechazo__gte=inicio_mes
+            ).count()
+            
+            total_calificaciones_equipo = todas_calificaciones.count()
+            
+            # PROMEDIOS Y TENDENCIAS
+            aprobadas = todas_calificaciones.filter(estado_calificacion='aprobado')
+            promedio_puntaje = aprobadas.aggregate(Avg('puntaje_calificacion'))['puntaje_calificacion__avg'] or 0
+            
+            # Porcentaje de aprobación
+            total_revisadas = todas_calificaciones.filter(
+                estado_calificacion__in=['aprobado', 'rechazado']
+            ).count()
+            porcentaje_aprobacion = (aprobadas.count() / total_revisadas * 100) if total_revisadas > 0 else 0
+            
+            # ALERTAS
+            # Calificaciones de alto riesgo pendientes
+            calificaciones_alto_riesgo = todas_calificaciones.filter(
+                estado_calificacion='por_aprobar',
+                nivel_riesgo='Alto'
+            ).count()
+            
+            # Calificaciones antiguas (más de 7 días sin revisar)
+            calificaciones_antiguas = todas_calificaciones.filter(
+                estado_calificacion='por_aprobar',
+                fecha_calculo__lt=hace_7_dias
+            ).count()
+            
+            # TOP CALIFICADOR
+            # Encontrar calificador con más aprobadas
+            top_calificador = None
+            top_aprobadas = 0
+            top_nombre = ""
+            
+            for cuenta in cuentas_equipo:
+                aprobadas_calificador = todas_calificaciones.filter(
+                    cuenta_id=cuenta,
+                    estado_calificacion='aprobado'
+                ).count()
+                
+                if aprobadas_calificador > top_aprobadas:
+                    top_aprobadas = aprobadas_calificador
+                    top_nombre = f"{cuenta.nombre} {cuenta.apellido}"
+            
+            # Construir respuesta
+            estadisticas = {
+                'total_pendientes_aprobar': total_pendientes_aprobar,
+                'total_aprobadas_hoy': total_aprobadas_hoy,
+                'total_rechazadas_hoy': total_rechazadas_hoy,
+                'total_pendientes_mes': total_pendientes_mes,
+                'total_aprobadas_mes': total_aprobadas_mes,
+                'total_rechazadas_mes': total_rechazadas_mes,
+                'total_calificaciones_equipo': total_calificaciones_equipo,
+                'promedio_puntaje_aprobadas': round(promedio_puntaje, 2),
+                'porcentaje_aprobacion': round(porcentaje_aprobacion, 2),
+                'calificaciones_alto_riesgo': calificaciones_alto_riesgo,
+                'calificaciones_antiguas': calificaciones_antiguas,
+                'top_calificador_nombre': top_nombre,
+                'top_calificador_aprobadas': top_aprobadas,
+            }
+            
+            serializer = DashboardSerializer(estadisticas)
+            return Response(serializer.data)
         
         except EquipoDeTrabajo.DoesNotExist:
             return Response({'error': 'Equipo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
