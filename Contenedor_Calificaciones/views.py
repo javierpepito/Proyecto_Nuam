@@ -1478,7 +1478,9 @@ class MiEquipoAPIView(APIView):
                         'nombre_completo': f"{cuenta.nombre} {cuenta.apellido}",
                         'correo': cuenta.correo,
                         'telefono': cuenta.telefono if cuenta.telefono else '',
-                        'total_calificaciones': calificaciones_calificador.count(),
+                        'total_calificaciones': calificaciones_calificador.filter(
+                            estado_calificacion__in=['por_aprobar', 'aprobado', 'rechazado']
+                        ).count(),
                         'calificaciones_aprobadas': calificaciones_calificador.filter(estado_calificacion='aprobado').count(),
                         'calificaciones_rechazadas': calificaciones_calificador.filter(estado_calificacion='rechazado').count(),
                         'calificaciones_pendientes': calificaciones_calificador.filter(estado_calificacion='por_aprobar').count(),
@@ -1671,6 +1673,10 @@ class HistorialCalificacionesAPIView(APIView):
                         'empresa_nombre': apr.calificacion.rut_empresa.nombre_empresa,
                         'empresa_pais': apr.calificacion.rut_empresa.pais,
                         'anio_tributario': apr.calificacion.anio_tributario,
+                        'tipo_calificacion': apr.calificacion.tipo_calificacion,
+                        'monto_tributario': float(apr.calificacion.monto_tributario),
+                        'factor_tributario': float(apr.calificacion.factor_tributario),
+                        'unidad_valor': apr.calificacion.unidad_valor,
                         'puntaje_calificacion': apr.calificacion.puntaje_calificacion,
                         'categoria_calificacion': apr.calificacion.categoria_calificacion,
                         'nivel_riesgo': apr.calificacion.nivel_riesgo,
@@ -1693,6 +1699,10 @@ class HistorialCalificacionesAPIView(APIView):
                         'empresa_nombre': rec.calificacion.rut_empresa.nombre_empresa,
                         'empresa_pais': rec.calificacion.rut_empresa.pais,
                         'anio_tributario': rec.calificacion.anio_tributario,
+                        'tipo_calificacion': rec.calificacion.tipo_calificacion,
+                        'monto_tributario': float(rec.calificacion.monto_tributario),
+                        'factor_tributario': float(rec.calificacion.factor_tributario),
+                        'unidad_valor': rec.calificacion.unidad_valor,
                         'puntaje_calificacion': rec.calificacion.puntaje_calificacion,
                         'categoria_calificacion': rec.calificacion.categoria_calificacion,
                         'nivel_riesgo': rec.calificacion.nivel_riesgo,
@@ -1787,7 +1797,7 @@ class DashboardAPIView(APIView):
             # Calificaciones de alto riesgo pendientes
             calificaciones_alto_riesgo = todas_calificaciones.filter(
                 estado_calificacion='por_aprobar',
-                nivel_riesgo='Alto'
+                nivel_riesgo__iexact='alto'
             ).count()
             
             # Calificaciones antiguas (más de 7 días sin revisar)
