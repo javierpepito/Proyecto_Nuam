@@ -18,6 +18,7 @@ urlpatterns = [
     
     # Dashboard principal
     path("api/dashboard/", views.DashboardAPIView.as_view(), name="api-dashboard"),
+    path("api/debug-aprobadas/", views.DebugAprobadasAPIView.as_view(), name="api-debug-aprobadas"),
     
     # Calificaciones pendientes (por aprobar)
     path("api/calificaciones-pendientes/", views.CalificacionesPendientesAPIView.as_view(), name="api-calificaciones-pendientes"),

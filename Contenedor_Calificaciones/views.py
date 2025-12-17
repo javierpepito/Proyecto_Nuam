@@ -1743,10 +1743,12 @@ class DashboardAPIView(APIView):
             equipo = EquipoDeTrabajo.objects.get(equipo_id=equipo_id)
             cuentas_equipo = Cuenta.objects.filter(equipo_trabajo=equipo, rol=ROL_CALIFICADOR)
             
-            # Fechas de referencia
-            hoy = timezone.now()
-            inicio_mes = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            hace_7_dias = hoy - timedelta(days=7)
+            # Fechas de referencia - Usar timezone local para evitar problemas
+            ahora = timezone.now()
+            ahora_local = timezone.localtime(ahora)
+            hoy = ahora_local.date()
+            inicio_mes = ahora_local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            hace_7_dias = ahora_local - timedelta(days=7)
             
             # Calificaciones del equipo
             todas_calificaciones = CalificacionTributaria.objects.filter(cuenta_id__in=cuentas_equipo)
@@ -1754,15 +1756,15 @@ class DashboardAPIView(APIView):
             # ESTADÍSTICAS GENERALES
             total_pendientes_aprobar = todas_calificaciones.filter(estado_calificacion='por_aprobar').count()
             
-            # Hoy
+            # Hoy - Comparar con fecha local
             total_aprobadas_hoy = CalificacionAprovada.objects.filter(
                 calificacion__cuenta_id__in=cuentas_equipo,
-                fecha_aprovacion__date=hoy.date()
+                fecha_aprovacion__date=hoy
             ).count()
             
             total_rechazadas_hoy = CalificacionRechazada.objects.filter(
                 calificacion__cuenta_id__in=cuentas_equipo,
-                fecha_rechazo__date=hoy.date()
+                fecha_rechazo__date=hoy
             ).count()
             
             # Mes actual
@@ -1841,6 +1843,82 @@ class DashboardAPIView(APIView):
             
             serializer = DashboardSerializer(estadisticas)
             return Response(serializer.data)
+        
+        except EquipoDeTrabajo.DoesNotExist:
+            return Response({'error': 'Equipo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class DebugAprobadasAPIView(APIView):
+    """
+    Endpoint de debug para verificar aprobadas/rechazadas
+    GET: /api/debug-aprobadas/?equipo_id=1
+    """
+    permission_classes = []
+    
+    def get(self, request):
+        equipo_id = request.query_params.get('equipo_id')
+        if not equipo_id:
+            return Response({'error': 'equipo_id es requerido'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            equipo = EquipoDeTrabajo.objects.get(equipo_id=equipo_id)
+            cuentas_equipo = Cuenta.objects.filter(equipo_trabajo=equipo, rol=ROL_CALIFICADOR)
+            
+            # Información de timezone
+            ahora = timezone.now()
+            ahora_local = timezone.localtime(ahora)
+            hoy = ahora_local.date()
+            
+            # Todas las aprobadas del equipo
+            todas_aprobadas = CalificacionAprovada.objects.filter(
+                calificacion__cuenta_id__in=cuentas_equipo
+            ).select_related('calificacion', 'jefe').order_by('-fecha_aprovacion')[:10]
+            
+            # Todas las rechazadas del equipo
+            todas_rechazadas = CalificacionRechazada.objects.filter(
+                calificacion__cuenta_id__in=cuentas_equipo
+            ).select_related('calificacion', 'jefe').order_by('-fecha_rechazo')[:10]
+            
+            aprobadas_list = []
+            for apr in todas_aprobadas:
+                fecha_local = timezone.localtime(apr.fecha_aprovacion)
+                aprobadas_list.append({
+                    'calificacion_id': apr.calificacion.calificacion_id,
+                    'empresa': apr.calificacion.nombre_empresa,
+                    'fecha_aprovacion_utc': str(apr.fecha_aprovacion),
+                    'fecha_aprovacion_local': str(fecha_local),
+                    'fecha_date': str(fecha_local.date()),
+                    'es_hoy': fecha_local.date() == hoy,
+                    'jefe': f"{apr.jefe.nombre} {apr.jefe.apellido}" if apr.jefe else 'N/A'
+                })
+            
+            rechazadas_list = []
+            for rec in todas_rechazadas:
+                fecha_local = timezone.localtime(rec.fecha_rechazo)
+                rechazadas_list.append({
+                    'calificacion_id': rec.calificacion.calificacion_id,
+                    'empresa': rec.calificacion.nombre_empresa,
+                    'fecha_rechazo_utc': str(rec.fecha_rechazo),
+                    'fecha_rechazo_local': str(fecha_local),
+                    'fecha_date': str(fecha_local.date()),
+                    'es_hoy': fecha_local.date() == hoy,
+                    'jefe': f"{rec.jefe.nombre} {rec.jefe.apellido}" if rec.jefe else 'N/A'
+                })
+            
+            return Response({
+                'timezone_info': {
+                    'timezone_actual': str(timezone.get_current_timezone()),
+                    'ahora_utc': str(ahora),
+                    'ahora_local': str(ahora_local),
+                    'hoy_fecha': str(hoy),
+                },
+                'contadores': {
+                    'total_aprobadas_hoy': sum(1 for a in aprobadas_list if a['es_hoy']),
+                    'total_rechazadas_hoy': sum(1 for r in rechazadas_list if r['es_hoy']),
+                },
+                'ultimas_10_aprobadas': aprobadas_list,
+                'ultimas_10_rechazadas': rechazadas_list,
+            })
         
         except EquipoDeTrabajo.DoesNotExist:
             return Response({'error': 'Equipo no encontrado'}, status=status.HTTP_404_NOT_FOUND)
